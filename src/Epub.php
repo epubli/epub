@@ -22,8 +22,7 @@ class Epub
     private $xpath;
     private $file;
     private $meta;
-    private $namespaces;
-    private $imagetoadd = '';
+    private $imageToAdd = '';
 
     /**
      * Constructor
@@ -84,12 +83,12 @@ class Epub
     {
         $this->zip->addFromString($this->meta, $this->xml->saveXML());
         // add the cover image
-        if ($this->imagetoadd) {
+        if ($this->imageToAdd) {
             $path = dirname('/'.$this->meta).'/php-epub-meta-cover.img'; // image path is relative to meta file
             $path = ltrim($path, '/');
 
-            $this->zip->addFromString($path, file_get_contents($this->imagetoadd));
-            $this->imagetoadd = '';
+            $this->zip->addFromString($path, file_get_contents($this->imageToAdd));
+            $this->imageToAdd = '';
         }
     }
 
@@ -343,7 +342,7 @@ class Epub
                 $node->attr('opf:media-type', $mime);
 
                 // remember path for save action
-                $this->imagetoadd = $path;
+                $this->imageToAdd = $path;
             }
 
             $this->reparse();
