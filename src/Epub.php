@@ -18,6 +18,7 @@ use ZipArchive;
 class Epub
 {
     private $xml;
+    private $zip;
     private $xpath;
     private $file;
     private $meta;
@@ -34,13 +35,13 @@ class Epub
     {
         // open file
         $this->file = $file;
-        $zip = new ZipArchive();
-        if (!@$zip->open($this->file)) {
+        $this->zip = new ZipArchive();
+        if (!@$this->zip->open($this->file)) {
             throw new Exception('Failed to read epub file');
         }
 
         // read container data
-        $data = $zip->getFromName('META-INF/container.xml');
+        $data = $this->zip->getFromName('META-INF/container.xml');
         if ($data == false) {
             throw new Exception('Failed to access epub container data');
         }
@@ -52,7 +53,7 @@ class Epub
         $this->meta = $nodes->item(0)->attr('full-path');
 
         // load metadata
-        $data = $zip->getFromName($this->meta);
+        $data = $this->zip->getFromName($this->meta);
         if (!$data) {
             throw new Exception('Failed to access epub metadata');
         }
@@ -61,8 +62,11 @@ class Epub
         $this->xml->loadXML($data);
         $this->xml->formatOutput = true;
         $this->xpath = new EpubDOMXPath($this->xml);
+    }
 
-        $zip->close();
+    public function __destruct()
+    {
+        $this->zip->close();
     }
 
     /**
@@ -78,21 +82,15 @@ class Epub
      */
     public function save()
     {
-        $zip = new ZipArchive();
-        $res = @$zip->open($this->file, ZipArchive::CREATE);
-        if ($res === false) {
-            throw new Exception('Failed to write back metadata');
-        }
-        $zip->addFromString($this->meta, $this->xml->saveXML());
+        $this->zip->addFromString($this->meta, $this->xml->saveXML());
         // add the cover image
         if ($this->imagetoadd) {
             $path = dirname('/'.$this->meta).'/php-epub-meta-cover.img'; // image path is relative to meta file
             $path = ltrim($path, '/');
 
-            $zip->addFromString($path, file_get_contents($this->imagetoadd));
+            $this->zip->addFromString($path, file_get_contents($this->imagetoadd));
             $this->imagetoadd = '';
         }
-        $zip->close();
     }
 
     /**
@@ -370,11 +368,7 @@ class Epub
         $path = dirname('/'.$this->meta).'/'.$path; // image path is relative to meta file
         $path = ltrim($path, '/');
 
-        $zip = new ZipArchive();
-        if (!@$zip->open($this->file)) {
-            throw new Exception('Failed to read epub file');
-        }
-        $data = $zip->getFromName($path);
+        $data = $this->zip->getFromName($path);
 
         return array(
             'mime' => $mime,
