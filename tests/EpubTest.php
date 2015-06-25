@@ -4,6 +4,13 @@ namespace Epubli\Epub;
 
 use PHPUnit_Framework_TestCase;
 
+/**
+ * Test for EPUB library
+ *
+ * Source: https://github.com/splitbrain/php-epub-meta
+ * @author Andreas Gohr <andi@splitbrain.org> © 2012
+ * @author Simon Schrape <simon@epubli.com> © 2015
+ */
 class EpubTest extends PHPUnit_Framework_TestCase
 {
     /** @var Epub */
