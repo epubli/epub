@@ -154,7 +154,7 @@ class Epub
             $rolefix = true;
         }
         foreach ($nodes as $node) {
-            $name = $node->nodeValue;
+            $name = $node->nodeValueUnescaped;
             $as = $node->attr('opf:file-as');
             if (!$as) {
                 $as = $name;
@@ -278,7 +278,7 @@ class Epub
             // add new ones
             $parent = $this->xpath->query('//opf:metadata')->item(0);
             foreach ($subjects as $subj) {
-                $node = $this->xml->createElement('dc:subject', htmlspecialchars($subj));
+                $node = new EpubDOMElement('dc:subject', $subj);
                 $node = $parent->appendChild($node);
             }
 
@@ -289,7 +289,7 @@ class Epub
         $subjects = array();
         $nodes = $this->xpath->query('//opf:metadata/dc:subject');
         foreach ($nodes as $node) {
-            $subjects[] = $node->nodeValue;
+            $subjects[] = $node->nodeValueUnescaped;
         }
 
         return $subjects;
@@ -403,11 +403,11 @@ class Epub
             $nodes = $this->xpath->query($xpath);
             if ($nodes->length == 1) {
                 if ($value === '') {
-                    // the user want's to empty this value -> delete the node
+                    // the user wants to empty this value -> delete the node
                     $nodes->item(0)->delete();
                 } else {
                     // replace value
-                    $nodes->item(0)->nodeValue = $value;
+                    $nodes->item(0)->nodeValueUnescaped = $value;
                 }
             } else {
                 // if there are multiple matching nodes for some reason delete
@@ -415,10 +415,10 @@ class Epub
                 foreach ($nodes as $n) {
                     $n->delete();
                 }
-                // readd them
+                // re-add them
                 if ($value) {
                     $parent = $this->xpath->query('//opf:metadata')->item(0);
-                    $node = $this->xml->createElement($item, $value);
+                    $node = new EpubDOMElement($item, $value);
                     $node = $parent->appendChild($node);
                     if ($att) {
                         $node->attr($att, $aval);
@@ -432,7 +432,7 @@ class Epub
         // get value
         $nodes = $this->xpath->query($xpath);
         if ($nodes->length) {
-            return $nodes->item(0)->nodeValue;
+            return $nodes->item(0)->nodeValueUnescaped;
         } else {
             return '';
         }
@@ -490,6 +490,8 @@ class EpubDOMXPath extends DOMXPath
  * Source: https://github.com/splitbrain/php-epub-meta
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
  * @author Simon Schrape <simon@epubli.com> © 2015
+ *
+ * @property string $nodeValueUnescaped
  */
 class EpubDOMElement extends DOMElement
 {
@@ -498,7 +500,6 @@ class EpubDOMElement extends DOMElement
         'opf' => 'http://www.idpf.org/2007/opf',
         'dc' => 'http://purl.org/dc/elements/1.1/'
     ];
-
 
     public function __construct($name, $value = '', $namespaceURI = '')
     {
@@ -510,6 +511,21 @@ class EpubDOMElement extends DOMElement
         parent::__construct($name, $value, $namespaceURI);
     }
 
+    public function __get($name)
+    {
+        switch ($name) {
+            case 'nodeValueUnescaped':
+                return htmlspecialchars_decode($this->nodeValue);
+        }
+    }
+
+    public function __set($name, $value)
+    {
+        switch ($name) {
+            case 'nodeValueUnescaped':
+                $this->nodeValue = htmlspecialchars($value);
+        }
+    }
 
     /**
      * Create and append a new child
