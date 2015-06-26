@@ -285,6 +285,26 @@ class Epub
     }
 
     /**
+     * Set the book's URI
+     *
+     * @param string $uri
+     */
+    public function setURI($uri)
+    {
+        $this->setMeta('dc:identifier', $uri, 'opf:scheme', 'URI');
+    }
+
+    /**
+     * Get the book's URI
+     *
+     * @return string
+     */
+    public function getURI()
+    {
+        return $this->getMeta('dc:identifier', 'opf:scheme', 'URI');
+    }
+
+    /**
      * Set the book's ISBN number
      *
      * @param string $isbn
