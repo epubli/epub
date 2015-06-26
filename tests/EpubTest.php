@@ -47,245 +47,234 @@ class EpubTest extends PHPUnit_Framework_TestCase
     public function testAuthors()
     {
         // read curent value
-        $this->assertEquals(['Shakespeare, William' => 'William Shakespeare'], $this->epub->Authors());
+        $this->assertEquals(['Shakespeare, William' => 'William Shakespeare'], $this->epub->getAuthors());
 
         // remove value with string
-        $this->epub->Authors('');
-        $this->assertEquals([], $this->epub->Authors());
+        $this->epub->setAuthors('');
+        $this->assertEquals([], $this->epub->getAuthors());
 
         // set single value by String
-        $this->epub->Authors('John Doe');
-        $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->Authors());
+        $this->epub->setAuthors('John Doe');
+        $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->getAuthors());
 
         // set single value by indexed array
-        $this->epub->Authors(array('John Doe'));
-        $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->Authors());
+        $this->epub->setAuthors(array('John Doe'));
+        $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->getAuthors());
 
         // remove value with array
-        $this->epub->Authors(array());
-        $this->assertEquals([], $this->epub->Authors());
+        $this->epub->setAuthors(array());
+        $this->assertEquals([], $this->epub->getAuthors());
 
         // set single value by associative array
-        $this->epub->Authors(array('Doe, John' => 'John Doe'));
-        $this->assertEquals(['Doe, John' => 'John Doe'], $this->epub->Authors());
+        $this->epub->setAuthors(array('Doe, John' => 'John Doe'));
+        $this->assertEquals(['Doe, John' => 'John Doe'], $this->epub->getAuthors());
 
         // set multi value by string
-        $this->epub->Authors('John Doe, Jane Smith');
-        $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->Authors());
+        $this->epub->setAuthors('John Doe, Jane Smith');
+        $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->getAuthors());
 
         // set multi value by indexed array
-        $this->epub->Authors(array('John Doe', 'Jane Smith'));
-        $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->Authors());
+        $this->epub->setAuthors(array('John Doe', 'Jane Smith'));
+        $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->getAuthors());
 
         // set multi value by associative  array
-        $this->epub->Authors(array('Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'));
-        $this->assertEquals(['Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'], $this->epub->Authors());
+        $this->epub->setAuthors(array('Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'));
+        $this->assertEquals(['Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'], $this->epub->getAuthors());
 
         // check escaping
-        $this->epub->Authors(array('Doe, John&nbsp;' => 'John Doe&nbsp;'));
-        $this->assertEquals(['Doe, John&nbsp;' => 'John Doe&nbsp;'], $this->epub->Authors());
+        $this->epub->setAuthors(array('Doe, John&nbsp;' => 'John Doe&nbsp;'));
+        $this->assertEquals(['Doe, John&nbsp;' => 'John Doe&nbsp;'], $this->epub->getAuthors());
     }
 
     public function testTitle()
     {
         // get current value
-        $this->assertEquals('Romeo and Juliet', $this->epub->Title());
+        $this->assertEquals('Romeo and Juliet', $this->epub->getTitle());
 
         // set new value
-        $this->epub->Title('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Title());
+        $this->epub->setTitle('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getTitle());
 
         // delete current value
-        $this->epub->Title('');
-        $this->assertEquals('', $this->epub->Title());
+        $this->epub->setTitle('');
+        $this->assertEquals('', $this->epub->getTitle());
 
         // check escaping
-        $this->epub->Title('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Title());
+        $this->epub->setTitle('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getTitle());
     }
 
     public function testLanguage()
     {
         // get current value
-        $this->assertEquals('en', $this->epub->Language());
+        $this->assertEquals('en', $this->epub->getLanguage());
 
         // set new value
-        $this->epub->Language('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Language());
+        $this->epub->setLanguage('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getLanguage());
 
         // delete current value
-        $this->epub->Language('');
-        $this->assertEquals('', $this->epub->Language());
+        $this->epub->setLanguage('');
+        $this->assertEquals('', $this->epub->getLanguage());
 
         // check escaping
-        $this->epub->Language('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Language());
+        $this->epub->setLanguage('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getLanguage());
     }
 
     public function testPublisher()
     {
         // get current value
-        $this->assertEquals('Feedbooks', $this->epub->Publisher());
+        $this->assertEquals('Feedbooks', $this->epub->getPublisher());
 
         // set new value
-        $this->epub->Publisher('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Publisher());
+        $this->epub->setPublisher('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getPublisher());
 
         // delete current value
-        $this->epub->Publisher('');
-        $this->assertEquals('', $this->epub->Publisher());
+        $this->epub->setPublisher('');
+        $this->assertEquals('', $this->epub->getPublisher());
 
         // check escaping
-        $this->epub->Publisher('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Publisher());
+        $this->epub->setPublisher('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getPublisher());
     }
 
     public function testCopyright()
     {
         // get current value
-        $this->assertEquals('', $this->epub->Copyright());
+        $this->assertEquals('', $this->epub->getCopyright());
 
         // set new value
-        $this->epub->Copyright('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Copyright());
+        $this->epub->setCopyright('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getCopyright());
 
         // delete current value
-        $this->epub->Copyright('');
-        $this->assertEquals('', $this->epub->Copyright());
+        $this->epub->setCopyright('');
+        $this->assertEquals('', $this->epub->getCopyright());
 
         // check escaping
-        $this->epub->Copyright('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Copyright());
+        $this->epub->setCopyright('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getCopyright());
     }
 
     public function testDescription()
     {
         // get current value
-        $this->assertStringStartsWith('Romeo and Juliet is a tragic play written', $this->epub->Description());
+        $this->assertStringStartsWith('Romeo and Juliet is a tragic play written', $this->epub->getDescription());
 
         // set new value
-        $this->epub->Description('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Description());
+        $this->epub->setDescription('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getDescription());
 
         // delete current value
-        $this->epub->Description('');
-        $this->assertEquals('', $this->epub->Description());
+        $this->epub->setDescription('');
+        $this->assertEquals('', $this->epub->getDescription());
 
         // check escaping
-        $this->epub->Description('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Description());
+        $this->epub->setDescription('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getDescription());
     }
 
     public function testISBN()
     {
         // get current value
-        $this->assertEquals('', $this->epub->ISBN());
+        $this->assertEquals('', $this->epub->getISBN());
 
         // set new value
-        $this->epub->ISBN('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->ISBN());
+        $this->epub->setISBN('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getISBN());
 
         // delete current value
-        $this->epub->ISBN('');
-        $this->assertEquals('', $this->epub->ISBN());
+        $this->epub->setISBN('');
+        $this->assertEquals('', $this->epub->getISBN());
 
         // check escaping
-        $this->epub->ISBN('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->ISBN());
+        $this->epub->setISBN('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getISBN());
     }
 
     public function testGoogle()
     {
         // get current value
-        $this->assertEquals('', $this->epub->Google());
+        $this->assertEquals('', $this->epub->getGoogle());
 
         // set new value
-        $this->epub->Google('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Google());
+        $this->epub->setGoogle('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getGoogle());
 
         // delete current value
-        $this->epub->Google('');
-        $this->assertEquals('', $this->epub->Google());
+        $this->epub->setGoogle('');
+        $this->assertEquals('', $this->epub->getGoogle());
 
         // check escaping
-        $this->epub->Google('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Google());
+        $this->epub->setGoogle('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getGoogle());
     }
 
     public function testAmazon()
     {
         // get current value
-        $this->assertEquals('', $this->epub->Amazon());
+        $this->assertEquals('', $this->epub->getAmazon());
 
         // set new value
-        $this->epub->Amazon('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->Amazon());
+        $this->epub->setAmazon('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getAmazon());
 
         // delete current value
-        $this->epub->Amazon('');
-        $this->assertEquals('', $this->epub->Amazon());
+        $this->epub->setAmazon('');
+        $this->assertEquals('', $this->epub->getAmazon());
 
         // check escaping
-        $this->epub->Amazon('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->Amazon());
+        $this->epub->setAmazon('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getAmazon());
     }
 
     public function testSubject()
     {
         // get current values
-        $this->assertEquals(
-            $this->epub->Subjects(),
-            array('Fiction', 'Drama', 'Romance')
-        );
+        $this->assertEquals(['Fiction', 'Drama', 'Romance'], $this->epub->getSubjects());
 
         // delete current values with String
-        $this->assertEquals(
-            $this->epub->Subjects(''),
-            array()
-        );
+        $this->epub->setSubjects('');
+        $this->assertEquals([], $this->epub->getSubjects());
 
         // set new values with String
-        $this->assertEquals(
-            $this->epub->Subjects('Fiction, Drama, Romance'),
-            array('Fiction', 'Drama', 'Romance')
-        );
+        $this->epub->setSubjects('Fiction, Drama, Romance');
+        $this->assertEquals(['Fiction', 'Drama', 'Romance'], $this->epub->getSubjects());
 
         // delete current values with Array
-        $this->assertEquals(
-            $this->epub->Subjects(array()),
-            array()
-        );
+        $this->epub->setSubjects([]);
+        $this->assertEquals([], $this->epub->getSubjects());
 
         // set new values with array
-        $this->assertEquals(
-            $this->epub->Subjects(array('Fiction', 'Drama', 'Romance')),
-            array('Fiction', 'Drama', 'Romance')
-        );
+        $this->epub->setSubjects(['Fiction', 'Drama', 'Romance']);
+        $this->assertEquals(['Fiction', 'Drama', 'Romance'], $this->epub->getSubjects());
 
         // check escaping
-        $this->assertEquals(
-            $this->epub->Subjects(array('Fiction', 'Drama&nbsp;', 'Romance')),
-            array('Fiction', 'Drama&nbsp;', 'Romance')
-        );
+        $this->epub->setSubjects(['Fiction', 'Drama&nbsp;', 'Romance']);
+        $this->assertEquals(['Fiction', 'Drama&nbsp;', 'Romance'], $this->epub->getSubjects());
     }
 
 
     public function testCover()
     {
         // read current cover
-        $cover = $this->epub->Cover();
+        $cover = $this->epub->getCover();
         $this->assertEquals($cover['mime'], 'image/png');
         $this->assertEquals($cover['found'], 'OPS/images/cover.png');
         $this->assertEquals(strlen($cover['data']), 657911);
 
         // delete cover
-        $cover = $this->epub->Cover('');
+        $this->epub->deleteCover();
+        $cover = $this->epub->getCover();
         $this->assertEquals($cover['mime'], 'image/gif');
         $this->assertEquals($cover['found'], false);
         $this->assertEquals(strlen($cover['data']), 42);
 
         // set new cover (will return a not-found as it's not yet saved)
-        $cover = $this->epub->Cover($this->testImage, 'image/jpeg');
+        $this->epub->setCover($this->testImage, 'image/jpeg');
+        $cover = $this->epub->getCover();
         $this->assertEquals($cover['mime'], 'image/jpeg');
         $this->assertEquals($cover['found'], 'OPS/php-epub-meta-cover.img');
         $this->assertEquals(strlen($cover['data']), 0);
@@ -293,8 +282,8 @@ class EpubTest extends PHPUnit_Framework_TestCase
         // save
         $this->epub->save();
 
-        // read now changed cover
-        $cover = $this->epub->Cover();
+        // read recently changed cover
+        $cover = $this->epub->getCover();
         $this->assertEquals($cover['mime'], 'image/jpeg');
         $this->assertEquals($cover['found'], 'OPS/php-epub-meta-cover.img');
         $this->assertEquals(strlen($cover['data']), filesize($this->testImage));
