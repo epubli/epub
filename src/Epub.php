@@ -4,6 +4,7 @@ namespace Epubli\Epub;
 
 use DOMDocument;
 use DOMElement;
+use DOMNodeList;
 use DOMXPath;
 use Exception;
 use ZipArchive;
@@ -32,6 +33,8 @@ class Epub
     private $opfDom;
     /** @var EpubDOMXPath The XPath object for the root (.opf) file */
     private $opfXPath;
+    /** @var DOMDocument The DOM of the TOC (.ncx) file */
+    private $tocDom;
     /** @var string The file path to the cover image if set */
     private $newCoverImage = '';
 
@@ -508,6 +511,24 @@ class Epub
         $this->setCover('', '');
     }
 
+    public function getDocumentStructure()
+    {
+        if (!$this->tocDom) {
+            $this->loadTOC();
+        }
+        $xp = new DOMXPath($this->tocDom);
+        $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
+        $title = $xp->query('//ncx:docTitle/ncx:text')->item(0)->nodeValue;
+        $author = $xp->query('//ncx:docAuthor/ncx:text')->item(0)->nodeValue;
+        $toc = new EpubToc($title, $author);
+
+        $navPointNodes = $xp->query('//ncx:navMap/ncx:navPoint');
+
+        $this->loadNavPoints($navPointNodes, $toc->getNavMap());
+
+        return $toc;
+    }
+
     /**
      * A simple setter for simple meta attributes
      *
@@ -580,6 +601,58 @@ class Epub
             return $node->nodeValueUnescaped;
         } else {
             return '';
+        }
+    }
+
+    private function loadTOC()
+    {
+        /** @var DOMElement $spine */
+        $spine = $this->opfXPath->query('//opf:spine')->item(0);
+        if (is_null($spine)) {
+            throw new Exception('No spine element found in epub!');
+        }
+        $tocId = $spine->getAttribute('toc');
+        if (empty($tocId)) {
+            throw new Exception('No toc ID given in spine!');
+        }
+        $nodes = $this->opfXPath->query("//opf:manifest/opf:item[@id=\"$tocId\"]");
+        /** @var DOMElement $tocItem */
+        $tocItem = $nodes->item(0);
+        if (is_null($tocItem)) {
+            throw new Exception('TOC item referenced by spine missing in manifest!');
+        }
+        $tocFile = $tocItem->getAttribute('href');
+        if (empty($tocFile)) {
+            throw new Exception('TOC item does not contain hyper reference to TOC file!');
+        }
+
+        $this->tocDom = $this->loadZipXML($tocFile);
+    }
+
+    /**
+     * @param DOMNodeList $navPointNodes List of nodes to load from.
+     * @param EpubNavPointList $navPointList List structure to load into.
+     */
+    private static function loadNavPoints(DOMNodeList $navPointNodes, EpubNavPointList $navPointList)
+    {
+        foreach ($navPointNodes as $navPointNode) {
+            /** @var DOMElement $navPointNode */
+            $id = $navPointNode->getAttribute('id');
+            $class = $navPointNode->getAttribute('class');
+            $playOrder = $navPointNode->getAttribute('playOrder');
+            /** @var DOMElement $labelNode */
+            $labelNode = $navPointNode->getElementsByTagName('navLabel')->item(0);
+            $labelTextNode = $labelNode ? $labelNode->getElementsByTagName('text')->item(0) : null;
+            $label = $labelNode ? $labelTextNode->nodeValue : '';
+            /** @var DOMElement $contentNode */
+            $contentNode = $navPointNode->getElementsByTagName('content')->item(0);
+            $contentSource = $contentNode ? $contentNode->getAttribute('src') : '';
+            $navPoint = new EpubNavPoint($id, $class, $playOrder, $label, $contentSource);
+            $navPointList->addNavPoint($navPoint);
+            $childNavPointNodes = $navPointNode->getElementsByTagName('navPoint');
+            $childNavPoints = $navPoint->getChildren();
+
+            self::loadNavPoints($childNavPointNodes, $childNavPoints);
         }
     }
 

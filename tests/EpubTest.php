@@ -274,7 +274,6 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['Fiction', 'Drama&nbsp;', 'Romance'], $this->epub->getSubjects());
     }
 
-
     public function testCover()
     {
         // read current cover
@@ -305,5 +304,36 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($cover['mime'], 'image/jpeg');
         $this->assertEquals($cover['found'], 'OPS/php-epub-meta-cover.img');
         $this->assertEquals(strlen($cover['data']), filesize($this->testImage));
+    }
+
+    public function testTOC()
+    {
+        $toc = $this->epub->getDocumentStructure();
+        $this->assertEquals('Romeo and Juliet', $toc->getDocTitle());
+        $this->assertEquals('Shakespeare, William', $toc->getDocAuthor());
+        $navMap = $toc->getNavMap();
+
+        $navPoint = $navMap->first();
+        /** @var EpubNavPoint $navPoint */
+        $this->assertEquals('level1-titlepage', $navPoint->getId());
+        $this->assertEquals('titlepage', $navPoint->getClass());
+        $this->assertEquals('1', $navPoint->getPlayOrder());
+        $this->assertEquals('Title', $navPoint->getNavLabel());
+        $this->assertEquals('title.xml', $navPoint->getContentSource());
+        $this->assertCount(0, $navPoint->getChildren());
+
+        $navMap->next();
+        $navMap->next();
+        $navPoint = $navMap->current();
+        /** @var EpubNavPoint $navPoint */
+        $this->assertEquals('sec77303', $navPoint->getId());
+        $this->assertEquals('section', $navPoint->getClass());
+        $this->assertEquals('3', $navPoint->getPlayOrder());
+        $this->assertEquals('Act I', $navPoint->getNavLabel());
+        $this->assertEquals('main0.xml', $navPoint->getContentSource());
+        $this->assertCount(6, $navPoint->getChildren());
+        $this->assertEquals('Prologue', $navPoint->getChildren()->first()->getNavLabel());
+        $this->assertEquals('SCENE V. A hall in Capulet\'s house.', $navPoint->getChildren()->last()->getNavLabel());
+
     }
 }
