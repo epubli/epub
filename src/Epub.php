@@ -49,13 +49,7 @@ class Epub
         }
 
         // read container data
-        $data = $this->zip->getFromName('META-INF/container.xml');
-        if ($data == false) {
-            throw new Exception('Failed to access epub container data');
-        }
-        $xml = new DOMDocument();
-        $xml->registerNodeClass(DOMElement::class, EpubDOMElement::class);
-        $xml->loadXML($data);
+        $xml = $this->loadZipXML('META-INF/container.xml');
         $xpath = new EpubDOMXPath($xml);
         $nodes = $xpath->query('//n:rootfiles/n:rootfile[@media-type="application/oebps-package+xml"]');
         /** @var EpubDOMElement $node */
@@ -63,14 +57,7 @@ class Epub
         $this->opfFile = $node->attr('full-path');
 
         // load metadata
-        $data = $this->zip->getFromName($this->opfFile);
-        if (!$data) {
-            throw new Exception('Failed to access epub metadata');
-        }
-        $this->opfDom = new DOMDocument();
-        $this->opfDom->registerNodeClass(DOMElement::class, EpubDOMElement::class);
-        $this->opfDom->loadXML($data);
-        $this->opfDom->formatOutput = true;
+        $this->opfDom = $this->loadZipXML($this->opfFile);
         $this->opfXPath = new EpubDOMXPath($this->opfDom);
     }
 
@@ -616,6 +603,24 @@ class Epub
     {
         $this->opfDom->loadXML($this->opfDom->saveXML());
         $this->opfXPath = new EpubDOMXPath($this->opfDom);
+    }
+
+    /**
+     * @param $path string The xml file to load from the zip archive.
+     * @return DOMDocument
+     * @throws Exception
+     */
+    private function loadZipXML($path)
+    {
+        $data = $this->zip->getFromName($path);
+        if (!$data) {
+            throw new Exception('Failed to access epub container data: '.$path);
+        }
+        $xml = new DOMDocument();
+        $xml->registerNodeClass(DOMElement::class, EpubDOMElement::class);
+        $xml->loadXML($data);
+
+        return $xml;
     }
 }
 
