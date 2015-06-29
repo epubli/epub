@@ -24,8 +24,10 @@ class Epub
     private $filename;
     /** @var ZipArchive The the epub file loaded as zip archive */
     private $zip;
-    /** @var string The (archive local) path to the root (.opf) file */
-    private $opfFile;
+    /** @var string The filename the root (.opf) file */
+    private $opfFilename;
+    /** @var string The (archive local) directory containing the root (.opf) file */
+    private $opfDir;
     /** @var DOMDocument The DOM of the root (.opf) file */
     private $opfDom;
     /** @var EpubDOMXPath The XPath object for the root (.opf) file */
@@ -49,15 +51,17 @@ class Epub
         }
 
         // read container data
-        $xml = $this->loadZipXML('META-INF/container.xml');
+        $xml = $this->loadZipXML('META-INF/container.xml', false);
         $xpath = new EpubDOMXPath($xml);
         $nodes = $xpath->query('//n:rootfiles/n:rootfile[@media-type="application/oebps-package+xml"]');
         /** @var EpubDOMElement $node */
         $node = $nodes->item(0);
-        $this->opfFile = $node->attr('full-path');
+        $rootFile = $node->attr('full-path');
+        $this->opfFilename = basename($rootFile);
+        $this->opfDir = dirname($rootFile).DIRECTORY_SEPARATOR;
 
         // load metadata
-        $this->opfDom = $this->loadZipXML($this->opfFile);
+        $this->opfDom = $this->loadZipXML($this->opfFilename);
         $this->opfXPath = new EpubDOMXPath($this->opfDom);
     }
 
@@ -79,11 +83,10 @@ class Epub
      */
     public function save()
     {
-        $this->zip->addFromString($this->opfFile, $this->opfDom->saveXML());
+        $this->zip->addFromString($this->opfDir.$this->opfFilename, $this->opfDom->saveXML());
         // add the cover image
         if ($this->newCoverImage) {
-            $path = dirname('/'.$this->opfFile).'/'.self::COVER_NAME.'.img'; // image path is relative to meta file
-            $path = ltrim($path, '/');
+            $path = $this->opfDir.self::COVER_NAME.'.img'; // image path is relative to meta file
 
             $this->zip->addFile($this->newCoverImage, $path);
             $this->newCoverImage = '';
@@ -486,8 +489,7 @@ class Epub
         $node = $nodes->item(0);
         $mime = $node->attr('opf:media-type');
         $path = $node->attr('opf:href');
-        $path = dirname('/'.$this->opfFile).'/'.$path; // image path is relative to meta file
-        $path = ltrim($path, '/');
+        $path = $this->opfDir.$path; // image path is relative to meta file
 
         $data = $this->zip->getFromName($path);
 
@@ -607,12 +609,13 @@ class Epub
 
     /**
      * @param $path string The xml file to load from the zip archive.
+     * @param bool $relativeToOPFDir If true, $path is considered relative to OPF directory, else to zip root
      * @return DOMDocument
      * @throws Exception
      */
-    private function loadZipXML($path)
+    private function loadZipXML($path, $relativeToOPFDir = true)
     {
-        $data = $this->zip->getFromName($path);
+        $data = $this->zip->getFromName(($relativeToOPFDir ? $this->opfDir : '').$path);
         if (!$data) {
             throw new Exception('Failed to access epub container data: '.$path);
         }
