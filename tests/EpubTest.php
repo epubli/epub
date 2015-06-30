@@ -334,6 +334,23 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertCount(6, $navPoint->getChildren());
         $this->assertEquals('Prologue', $navPoint->getChildren()->first()->getNavLabel());
         $this->assertEquals('SCENE V. A hall in Capulet\'s house.', $navPoint->getChildren()->last()->getNavLabel());
+    }
 
+    /**
+     * @expectedException Exception
+     */
+    public function testContentsNonExisting()
+    {
+        $this->epub->getContents('I-am-not-there.xml');
+    }
+
+    public function testContents()
+    {
+        $contents = trim($this->epub->getContents('main0.xml'));
+        $this->assertStringStartsWith('Act I', $contents);
+        $this->assertStringEndsWith('our toil shall strive to mend.', $contents);
+        $contents = trim($this->epub->getContents('main1.xml'));
+        $this->assertStringStartsWith('SCENE I. Verona. A public place.', $contents);
+        $this->assertStringEndsWith('I\'ll pay that doctrine, or else die in debt.'.PHP_EOL.'Exeunt', $contents);
     }
 }

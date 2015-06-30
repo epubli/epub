@@ -530,6 +530,21 @@ class Epub
     }
 
     /**
+     * Extract the plain text contents from an XML file contained in the epub.
+     *
+     * @param string $file The XML file to load (path in zip archive)
+     * @return string The plain text contents of that file.
+     * @throws Exception If that file does not exist.
+     */
+    public function getContents($file)
+    {
+        $dom = $this->loadZipXML($file);
+        $body = $dom->getElementsByTagName('body')->item(0) ?: $dom->documentElement;
+
+        return $body->nodeValue;
+    }
+
+    /**
      * A simple setter for simple meta attributes
      *
      * It should only be used for attributes that are expected to be unique
