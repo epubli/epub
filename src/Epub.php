@@ -321,46 +321,6 @@ class Epub
     }
 
     /**
-     * Set the Google Books ID
-     *
-     * @param string $google
-     */
-    public function setGoogle($google)
-    {
-        $this->setMeta('dc:identifier', $google, 'opf:scheme', 'GOOGLE');
-    }
-
-    /**
-     * Get the Google Books ID
-     *
-     * @return string
-     */
-    public function getGoogle()
-    {
-        return $this->getMeta('dc:identifier', 'opf:scheme', 'GOOGLE');
-    }
-
-    /**
-     * Set the Amazon ID of the book
-     *
-     * @param string $amazon
-     */
-    public function setAmazon($amazon)
-    {
-        $this->setMeta('dc:identifier', $amazon, 'opf:scheme', 'AMAZON');
-    }
-
-    /**
-     * Get the Amazon ID of the book
-     *
-     * @return string
-     */
-    public function getAmazon()
-    {
-        return $this->getMeta('dc:identifier', 'opf:scheme', 'AMAZON');
-    }
-
-    /**
      * Set the book's subjects (aka. tags)
      *
      * Subject should be given as array, but a comma separated string will also

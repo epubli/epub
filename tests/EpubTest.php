@@ -212,42 +212,6 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getISBN());
     }
 
-    public function testGoogle()
-    {
-        // get current value
-        $this->assertEquals('', $this->epub->getGoogle());
-
-        // set new value
-        $this->epub->setGoogle('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->getGoogle());
-
-        // delete current value
-        $this->epub->setGoogle('');
-        $this->assertEquals('', $this->epub->getGoogle());
-
-        // check escaping
-        $this->epub->setGoogle('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getGoogle());
-    }
-
-    public function testAmazon()
-    {
-        // get current value
-        $this->assertEquals('', $this->epub->getAmazon());
-
-        // set new value
-        $this->epub->setAmazon('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->getAmazon());
-
-        // delete current value
-        $this->epub->setAmazon('');
-        $this->assertEquals('', $this->epub->getAmazon());
-
-        // check escaping
-        $this->epub->setAmazon('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getAmazon());
-    }
-
     public function testSubject()
     {
         // get current values
