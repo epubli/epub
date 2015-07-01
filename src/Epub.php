@@ -281,13 +281,35 @@ class Epub
     }
 
     /**
+     * Set an identifier in the opf file’s meta section.
+     *
+     * @param $idScheme
+     * @param $value
+     */
+    public function setIdentifier($idScheme, $value)
+    {
+        $this->setMeta('dc:identifier', $value, 'opf:scheme', $idScheme);
+    }
+
+    /**
+     * Set an identifier from the opf file’s meta section.
+     *
+     * @param $idScheme
+     * @return string
+     */
+    public function getIdentifier($idScheme)
+    {
+        return $this->getMeta('dc:identifier', 'opf:scheme', $idScheme);
+    }
+
+    /**
      * Set the book's URI
      *
      * @param string $uri
      */
     public function setURI($uri)
     {
-        $this->setMeta('dc:identifier', $uri, 'opf:scheme', 'URI');
+        $this->setIdentifier('URI', $uri);
     }
 
     /**
@@ -297,27 +319,27 @@ class Epub
      */
     public function getURI()
     {
-        return $this->getMeta('dc:identifier', 'opf:scheme', 'URI');
+        return $this->getIdentifier('URI');
     }
 
     /**
-     * Set the book's ISBN number
+     * Set the book's ISBN
      *
      * @param string $isbn
      */
     public function setISBN($isbn)
     {
-        $this->setMeta('dc:identifier', $isbn, 'opf:scheme', 'ISBN');
+        $this->setIdentifier('ISBN', $isbn);
     }
 
     /**
-     * Get the book's ISBN number
+     * Get the book's ISBN
      *
      * @return string
      */
     public function getISBN()
     {
-        return $this->getMeta('dc:identifier', 'opf:scheme', 'ISBN');
+        return $this->getIdentifier('ISBN');
     }
 
     /**
