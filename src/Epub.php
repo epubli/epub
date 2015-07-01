@@ -303,6 +303,26 @@ class Epub
     }
 
     /**
+     * Set the book's UUID
+     *
+     * @param string $uuid
+     */
+    public function setUUID($uuid)
+    {
+        $this->setIdentifier(['UUID', 'uuid', 'URN', 'urn'], $uuid);
+    }
+
+    /**
+     * Get the book's UUID
+     *
+     * @return string
+     */
+    public function getUUID()
+    {
+        return $this->getIdentifier(['UUID', 'uuid', 'URN', 'urn']);
+    }
+
+    /**
      * Set the book's URI
      *
      * @param string $uri
@@ -533,14 +553,13 @@ class Epub
      *
      * @param string $item XML node to set
      * @param string $value New node value
-     * @param bool|string $att Attribute name
-     * @param bool|string $aval Attribute value
+     * @param bool|string $attribute Attribute name
+     * @param bool|string $attributeValue Attribute value
      * @return string
      */
-    private function setMeta($item, $value, $att = false, $aval = false)
+    private function setMeta($item, $value, $attribute = false, $attributeValue = false)
     {
-        // construct xpath
-        $xpath = '//opf:metadata/'.$item.($att ? "[@$att=\"$aval\"]" : '');
+        $xpath = $this->buildMetaXPath($item, $attribute, $attributeValue);
 
         // set value
         $nodes = $this->opfXPath->query($xpath);
@@ -566,8 +585,12 @@ class Epub
                 $parent = $this->opfXPath->query('//opf:metadata')->item(0);
                 $node = new EpubDOMElement($item, $value);
                 $node = $parent->appendChild($node);
-                if ($att) {
-                    $node->attr($att, $aval);
+                if ($attribute) {
+                    if (is_array($attributeValue)) {
+                        // use first given value for new attribute
+                        $attributeValue = reset($attributeValue);
+                    }
+                    $node->attr($attribute, $attributeValue);
                 }
             }
         }
@@ -587,7 +610,7 @@ class Epub
      */
     private function getMeta($item, $att = false, $aval = false)
     {
-        $xpath = '//opf:metadata/'.$item.($att ? "[@$att=\"$aval\"]" : '');
+        $xpath = $this->buildMetaXPath($item, $att, $aval);
 
         // get value
         $nodes = $this->opfXPath->query($xpath);
@@ -599,6 +622,35 @@ class Epub
         } else {
             return '';
         }
+    }
+
+    /**
+     * Build an XPath expression to select certain nodes in the metadata section.
+     *
+     * @param string $element The node name of the elements to select.
+     * @param string $attribute If set, the attribute required in the element.
+     * @param string|array $value If set, the value of the above named attribute. If an array is given
+     * all of its values will be allowed in the selector.
+     * @return string
+     */
+    private function buildMetaXPath($element, $attribute, $value)
+    {
+        $xpath = '//opf:metadata/'.$element;
+        if ($attribute) {
+            $xpath .= "[@$attribute";
+            if ($value) {
+                $xpath .= '="';
+                if (is_array($value)) {
+                    $xpath .= implode("\" or @$attribute=\"", $value);
+                } else {
+                    $xpath .= $value;
+                }
+                $xpath .= '"';
+            }
+            $xpath .= ']';
+        }
+
+        return $xpath;
     }
 
     private function loadTOC()

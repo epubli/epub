@@ -176,6 +176,24 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getDescription());
     }
 
+    public function testUUID()
+    {
+        // get current value
+        $this->assertEquals('urn:uuid:7d38d098-4234-11e1-97b6-001cc0a62c0b', $this->epub->getUUID());
+
+        // set new value
+        $this->epub->setUUID('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getUUID());
+
+        // delete current value
+        $this->epub->setUUID('');
+        $this->assertEquals('', $this->epub->getUUID());
+
+        // check escaping
+        $this->epub->setUUID('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getUUID());
+    }
+
     public function testURI()
     {
         // get current value
