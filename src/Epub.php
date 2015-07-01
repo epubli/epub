@@ -283,23 +283,27 @@ class Epub
     /**
      * Set an identifier in the opf file’s meta section.
      *
-     * @param $idScheme
-     * @param $value
+     * @param string|array $idScheme The identifier’s scheme. If an array is given
+     * all matching identifiers are replaced by one with the first value as scheme.
+     * @param string $value
+     * @param bool $caseSensitive
      */
-    public function setIdentifier($idScheme, $value)
+    public function setIdentifier($idScheme, $value, $caseSensitive = false)
     {
-        $this->setMeta('dc:identifier', $value, 'opf:scheme', $idScheme);
+        $this->setMeta('dc:identifier', $value, 'opf:scheme', $idScheme, $caseSensitive);
     }
 
     /**
      * Set an identifier from the opf file’s meta section.
      *
-     * @param $idScheme
-     * @return string
+     * @param string|array $idScheme The identifier’s scheme. If an array is given
+     * the scheme can be any of its values.
+     * @param bool $caseSensitive
+     * @return string The value of the first matching element.
      */
-    public function getIdentifier($idScheme)
+    public function getIdentifier($idScheme, $caseSensitive = false)
     {
-        return $this->getMeta('dc:identifier', 'opf:scheme', $idScheme);
+        return $this->getMeta('dc:identifier', 'opf:scheme', $idScheme, $caseSensitive);
     }
 
     /**
@@ -319,7 +323,7 @@ class Epub
      */
     public function getUUID()
     {
-        return $this->getIdentifier(['UUID', 'uuid', 'URN', 'urn']);
+        return $this->getIdentifier(['uuid', 'urn']);
     }
 
     /**
@@ -329,7 +333,7 @@ class Epub
      */
     public function setURI($uri)
     {
-        $this->setIdentifier('URI', $uri);
+        $this->setIdentifier('uri', $uri);
     }
 
     /**
@@ -339,7 +343,7 @@ class Epub
      */
     public function getURI()
     {
-        return $this->getIdentifier('URI');
+        return $this->getIdentifier('uri');
     }
 
     /**
@@ -349,7 +353,7 @@ class Epub
      */
     public function setISBN($isbn)
     {
-        $this->setIdentifier('ISBN', $isbn);
+        $this->setIdentifier('isbn', $isbn);
     }
 
     /**
@@ -359,7 +363,7 @@ class Epub
      */
     public function getISBN()
     {
-        return $this->getIdentifier('ISBN');
+        return $this->getIdentifier('isbn');
     }
 
     /**
@@ -555,11 +559,12 @@ class Epub
      * @param string $value New node value
      * @param bool|string $attribute Attribute name
      * @param bool|string $attributeValue Attribute value
+     * @param bool $caseSensitive
      * @return string
      */
-    private function setMeta($item, $value, $attribute = false, $attributeValue = false)
+    private function setMeta($item, $value, $attribute = false, $attributeValue = false, $caseSensitive = true)
     {
-        $xpath = $this->buildMetaXPath($item, $attribute, $attributeValue);
+        $xpath = $this->buildMetaXPath($item, $attribute, $attributeValue, $caseSensitive);
 
         // set value
         $nodes = $this->opfXPath->query($xpath);
@@ -606,11 +611,12 @@ class Epub
      * @param string $item XML node to get
      * @param bool|string $att Attribute name
      * @param bool|string $aval Attribute value
+     * @param bool $caseSensitive
      * @return string
      */
-    private function getMeta($item, $att = false, $aval = false)
+    private function getMeta($item, $att = false, $aval = false, $caseSensitive = true)
     {
-        $xpath = $this->buildMetaXPath($item, $att, $aval);
+        $xpath = $this->buildMetaXPath($item, $att, $aval, $caseSensitive);
 
         // get value
         $nodes = $this->opfXPath->query($xpath);
@@ -631,20 +637,29 @@ class Epub
      * @param string $attribute If set, the attribute required in the element.
      * @param string|array $value If set, the value of the above named attribute. If an array is given
      * all of its values will be allowed in the selector.
+     * @param bool $caseSensitive If false, attribute values are matched case insensitively.
+     * (This is not completely true, as only full upper or lower case strings are matched, not mixed case.
+     * A lower-case function is missing in XPath 1.0.)
      * @return string
      */
-    private function buildMetaXPath($element, $attribute, $value)
+    private function buildMetaXPath($element, $attribute, $value, $caseSensitive = true)
     {
         $xpath = '//opf:metadata/'.$element;
         if ($attribute) {
             $xpath .= "[@$attribute";
             if ($value) {
-                $xpath .= '="';
-                if (is_array($value)) {
-                    $xpath .= implode("\" or @$attribute=\"", $value);
-                } else {
-                    $xpath .= $value;
+                $values = is_array($value) ? $value : [$value];
+                if (!$caseSensitive) {
+                    $temp = [];
+                    foreach ($values as $item) {
+                        $temp[] = strtolower($item);
+                        $temp[] = strtoupper($item);
+                    }
+                    $values = $temp;
                 }
+
+                $xpath .= '="';
+                $xpath .= implode("\" or @$attribute=\"", $values);
                 $xpath .= '"';
             }
             $xpath .= ']';
