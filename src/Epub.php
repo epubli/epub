@@ -307,6 +307,28 @@ class Epub
     }
 
     /**
+     * Set the book's unique identifier
+     *
+     * @param string $value
+     */
+    public function setUniqueIdentifier($value)
+    {
+        $idRef = $this->opfDom->documentElement->getAttribute('unique-identifier');
+        $this->setMeta('dc:identifier', $value, 'id', $idRef);
+    }
+
+    /**
+     * Get the book's unique identifier
+     *
+     * @return string
+     */
+    public function getUniqueIdentifier()
+    {
+        $idRef = $this->opfDom->documentElement->getAttribute('unique-identifier');
+        return $this->getMeta('dc:identifier', 'id', $idRef);
+    }
+
+    /**
      * Set the book's UUID
      *
      * @param string $uuid

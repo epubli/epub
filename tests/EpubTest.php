@@ -176,6 +176,18 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getDescription());
     }
 
+    public function testUniqueIdentifier()
+    {
+        // get current value
+        $this->assertEquals('urn:uuid:7d38d098-4234-11e1-97b6-001cc0a62c0b', $this->epub->getUniqueIdentifier());
+
+        // set new value
+        $this->epub->setUniqueIdentifier('134htb34tp089h1b');
+        $this->assertEquals('134htb34tp089h1b', $this->epub->getUniqueIdentifier());
+        // this should have affected the same node that is found when looking for UUID/URN scheme
+        $this->assertEquals('134htb34tp089h1b', $this->epub->getUUID());
+    }
+
     public function testUUID()
     {
         // get current value
