@@ -320,12 +320,19 @@ class Epub
     /**
      * Get the book's unique identifier
      *
+     * @param bool $normalize
      * @return string
      */
-    public function getUniqueIdentifier()
+    public function getUniqueIdentifier($normalize = false)
     {
         $idRef = $this->opfDom->documentElement->getAttribute('unique-identifier');
-        return $this->getMeta('dc:identifier', 'id', $idRef);
+        $idVal = $this->getMeta('dc:identifier', 'id', $idRef);
+        if ($normalize) {
+            $idVal = strtolower($idVal);
+            $idVal = str_replace('urn:uuid:' ,'' ,$idVal);
+        }
+
+        return $idVal;
     }
 
     /**
