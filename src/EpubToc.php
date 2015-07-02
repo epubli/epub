@@ -153,7 +153,9 @@ class EpubNavPoint
     /** @var string */
     private $navLabel;
     /** @var string */
-    private $contentSource;
+    private $contentSourceFile;
+    /** @var string */
+    private $contentSourceFragment;
     /** @var EpubNavPointList */
     private $children;
 
@@ -170,7 +172,9 @@ class EpubNavPoint
         $this->class = $class;
         $this->playOrder = $playOrder;
         $this->navLabel = $label;
-        $this->contentSource = $contentSource;
+        $contentSourceParts = explode('#', $contentSource, 2);
+        $this->contentSourceFile = $contentSourceParts[0];
+        $this->contentSourceFragment = isset($contentSourceParts[1]) ? $contentSourceParts[1] : null;
         $this->children = new EpubNavPointList();
     }
 
@@ -211,7 +215,23 @@ class EpubNavPoint
      */
     public function getContentSource()
     {
-        return $this->contentSource;
+        return $this->contentSourceFile.($this->contentSourceFragment ? '#'.$this->contentSourceFragment : '');
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentSourceFile()
+    {
+        return $this->contentSourceFile;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentSourceFragment()
+    {
+        return $this->contentSourceFragment;
     }
 
     /**
