@@ -575,7 +575,7 @@ class Epub
      */
     public function getContents($file)
     {
-        $dom = $this->loadZipXML($file);
+        $dom = $this->loadZipXML($file, true, true);
         $body = $dom->getElementsByTagName('body')->item(0) ?: $dom->documentElement;
 
         return $body->nodeValue;
@@ -778,18 +778,23 @@ class Epub
     /**
      * @param $path string The xml file to load from the zip archive.
      * @param bool $relativeToOPFDir If true, $path is considered relative to OPF directory, else to zip root
+     * @param bool $isHTML If true, file is loaded as HTML.
      * @return DOMDocument
      * @throws Exception
      */
-    private function loadZipXML($path, $relativeToOPFDir = true)
+    private function loadZipXML($path, $relativeToOPFDir = true, $isHTML = false)
     {
         $data = $this->zip->getFromName(($relativeToOPFDir ? $this->opfDir : '').$path);
         if (!$data) {
             throw new Exception('Failed to access epub container data: '.$path);
         }
         $xml = new DOMDocument();
-        $xml->registerNodeClass(DOMElement::class, EpubDOMElement::class);
-        $xml->loadXML($data);
+        if ($isHTML) {
+            $xml->loadHTML($data);
+        } else {
+            $xml->registerNodeClass(DOMElement::class, EpubDOMElement::class);
+            $xml->loadXML($data);
+        }
 
         return $xml;
     }
