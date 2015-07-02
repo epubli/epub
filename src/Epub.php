@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
+use Epubli\Common\Tools\HTMLTools;
 use Exception;
 use ZipArchive;
 
@@ -778,7 +779,7 @@ class Epub
     /**
      * @param $path string The xml file to load from the zip archive.
      * @param bool $relativeToOPFDir If true, $path is considered relative to OPF directory, else to zip root
-     * @param bool $isHTML If true, file is loaded as HTML.
+     * @param bool $isHTML If true, file contents is considered HTML.
      * @return DOMDocument
      * @throws Exception
      */
@@ -790,11 +791,11 @@ class Epub
         }
         $xml = new DOMDocument();
         if ($isHTML) {
-            $xml->loadHTML($data);
+            $data = HTMLTools::convertEntitiesNamedToNumeric($data);
         } else {
             $xml->registerNodeClass(DOMElement::class, EpubDOMElement::class);
-            $xml->loadXML($data);
         }
+        $xml->loadXML($data);
 
         return $xml;
     }
