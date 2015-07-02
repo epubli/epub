@@ -38,6 +38,10 @@ class Epub
     private $tocDom;
     /** @var string The file path to the cover image if set */
     private $newCoverImage = '';
+    /** @var EpubSpine The spine structure of this epub */
+    private $spine;
+    /** @var EpubToc The TOC structure of this epub */
+    private $toc;
 
     /**
      * Constructor
@@ -547,24 +551,61 @@ class Epub
         $this->setCover('', '');
     }
 
-    public function getDocumentStructure()
+    /**
+     * @return EpubSpine
+     * @throws Exception
+     */
+    public function getSpine()
     {
-        if (!$this->tocDom) {
-            $this->loadTOC();
+        if (!$this->spine) {
+            /** @var DOMElement $spineNode */
+            $spineNode = $this->opfXPath->query('//opf:spine')->item(0);
+            if (is_null($spineNode)) {
+                throw new Exception('No spine element found in epub!');
+            }
+            $tocFile = $this->getTOCFile($spineNode);
+
+            $this->spine = new EpubSpine();
+            $this->spine->setTOCSource($tocFile);
+            $itemRefNodes = $spineNode->getElementsByTagName('itemref');
+            foreach ($itemRefNodes as $itemRef) {
+                /** @var DOMElement $itemRef */
+                $id = $itemRef->getAttribute('idref');
+                /** @var DOMElement $item */
+                $item = $this->opfXPath->query("//opf:manifest/opf:item[@id=\"$id\"]")->item(0);
+                if (is_null($item)) {
+                    throw new Exception('Item referenced in spine missing in manifest!');
+                }
+                $href = $item->getAttribute('href');
+                $mediaType = $item->getAttribute('media-type');
+                $this->spine->addItem(new EpubSpineItem($id, $href, $mediaType));
+            }
         }
-        $xp = new DOMXPath($this->tocDom);
-        $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
-        $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
-        $title = $titleNode ? $titleNode->nodeValue : '';
-        $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
-        $author = $authorNode ? $authorNode->nodeValue : '';
-        $toc = new EpubToc($title, $author);
 
-        $navPointNodes = $xp->query('//ncx:navMap/ncx:navPoint');
+        return $this->spine;
+    }
 
-        $this->loadNavPoints($navPointNodes, $toc->getNavMap());
+    public function getTOC()
+    {
+        if (!$this->toc) {
+            if (!$this->tocDom) {
+                $tocFile = $this->getSpine()->getTOCSource();
+                $this->tocDom = $this->loadZipXML($tocFile);
+            }
+            $xp = new DOMXPath($this->tocDom);
+            $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
+            $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
+            $title = $titleNode ? $titleNode->nodeValue : '';
+            $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
+            $author = $authorNode ? $authorNode->nodeValue : '';
+            $this->toc = new EpubToc($title, $author);
 
-        return $toc;
+            $navPointNodes = $xp->query('//ncx:navMap/ncx:navPoint');
+
+            $this->loadNavPoints($navPointNodes, $this->toc->getNavMap());
+        }
+
+        return $this->toc;
     }
 
     /**
@@ -700,20 +741,19 @@ class Epub
         return $xpath;
     }
 
-    private function loadTOC()
+    /**
+     * @param DOMElement $spineNode
+     * @return string
+     * @throws Exception
+     */
+    private function getTOCFile(DOMElement $spineNode)
     {
-        /** @var DOMElement $spine */
-        $spine = $this->opfXPath->query('//opf:spine')->item(0);
-        if (is_null($spine)) {
-            throw new Exception('No spine element found in epub!');
-        }
-        $tocId = $spine->getAttribute('toc');
+        $tocId = $spineNode->getAttribute('toc');
         if (empty($tocId)) {
             throw new Exception('No toc ID given in spine!');
         }
-        $nodes = $this->opfXPath->query("//opf:manifest/opf:item[@id=\"$tocId\"]");
         /** @var DOMElement $tocItem */
-        $tocItem = $nodes->item(0);
+        $tocItem = $this->opfXPath->query("//opf:manifest/opf:item[@id=\"$tocId\"]")->item(0);
         if (is_null($tocItem)) {
             throw new Exception('TOC item referenced by spine missing in manifest!');
         }
@@ -722,7 +762,7 @@ class Epub
             throw new Exception('TOC item does not contain hyper reference to TOC file!');
         }
 
-        $this->tocDom = $this->loadZipXML($tocFile);
+        return $tocFile;
     }
 
     /**

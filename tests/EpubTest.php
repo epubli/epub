@@ -302,7 +302,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     public function testTOC()
     {
-        $toc = $this->epub->getDocumentStructure();
+        $toc = $this->epub->getTOC();
         $this->assertEquals('Romeo and Juliet', $toc->getDocTitle());
         $this->assertEquals('Shakespeare, William', $toc->getDocAuthor());
         $navMap = $toc->getNavMap();
