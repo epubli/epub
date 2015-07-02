@@ -66,7 +66,9 @@ class Epub
         $node = $nodes->item(0);
         $rootFile = $node->attr('full-path');
         $this->opfFilename = basename($rootFile);
-        $this->opfDir = dirname($rootFile).DIRECTORY_SEPARATOR;
+        if ($rootFile != $this->opfFilename) {
+            $this->opfDir = dirname($rootFile).DIRECTORY_SEPARATOR;
+        }
 
         // load metadata
         $this->opfDom = $this->loadZipXML($this->opfFilename);
