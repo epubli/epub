@@ -553,8 +553,10 @@ class Epub
         }
         $xp = new DOMXPath($this->tocDom);
         $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
-        $title = $xp->query('//ncx:docTitle/ncx:text')->item(0)->nodeValue;
-        $author = $xp->query('//ncx:docAuthor/ncx:text')->item(0)->nodeValue;
+        $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
+        $title = $titleNode ? $titleNode->nodeValue : '';
+        $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
+        $author = $authorNode ? $authorNode->nodeValue : '';
         $toc = new EpubToc($title, $author);
 
         $navPointNodes = $xp->query('//ncx:navMap/ncx:navPoint');
