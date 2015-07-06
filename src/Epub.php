@@ -605,7 +605,7 @@ class Epub
 
             $navPointNodes = $xp->query('//ncx:navMap/ncx:navPoint');
 
-            $this->loadNavPoints($navPointNodes, $this->toc->getNavMap());
+            $this->loadNavPoints($navPointNodes, $this->toc->getNavMap(), $xp);
         }
 
         return $this->toc;
@@ -640,9 +640,14 @@ class Epub
         $dom = $this->loadZipXML($file, true, true);
         // get the starting point
         $xp = new DOMXPath($dom);
-        $node = $xp->query("//*[@id='$fragmentBegin']")->item(0)
-            ?: $dom->getElementsByTagName('body')->item(0)
-                ?: $dom->documentElement;
+        if ($fragmentBegin) {
+            $node = $xp->query("//*[@id='$fragmentBegin']")->item(0);
+            if (!$node){
+                throw new Exception("Begin of fragment not found: No element with ID $fragmentBegin in $file!");
+            }
+        } else {
+            $node = $dom->getElementsByTagName('body')->item(0) ?: $dom->documentElement;
+        }
 
         $contents = '';
         // traverse DOM structure till end point is reached, accumulating the contents
@@ -665,7 +670,11 @@ class Epub
                     $node = $node->parentNode->nextSibling;
                 }
                 else {
+                    // reached end of DOM
                     $node = null;
+                    if ($fragmentEnd) {
+                        throw new Exception("End of fragment not found: No element with ID $fragmentEnd in $file!");
+                    }
                 }
             }
         }
@@ -819,26 +828,24 @@ class Epub
      * @param DOMNodeList $navPointNodes List of nodes to load from.
      * @param EpubNavPointList $navPointList List structure to load into.
      */
-    private static function loadNavPoints(DOMNodeList $navPointNodes, EpubNavPointList $navPointList)
+    private static function loadNavPoints(DOMNodeList $navPointNodes, EpubNavPointList $navPointList, DOMXPath $xp)
     {
         foreach ($navPointNodes as $navPointNode) {
             /** @var DOMElement $navPointNode */
             $id = $navPointNode->getAttribute('id');
             $class = $navPointNode->getAttribute('class');
             $playOrder = $navPointNode->getAttribute('playOrder');
-            /** @var DOMElement $labelNode */
-            $labelNode = $navPointNode->getElementsByTagName('navLabel')->item(0);
-            $labelTextNode = $labelNode ? $labelNode->getElementsByTagName('text')->item(0) : null;
-            $label = $labelNode ? $labelTextNode->nodeValue : '';
+            $labelTextNode = $xp->query('ncx:navLabel/ncx:text', $navPointNode)->item(0);
+            $label = $labelTextNode ? $labelTextNode->nodeValue : '';
             /** @var DOMElement $contentNode */
-            $contentNode = $navPointNode->getElementsByTagName('content')->item(0);
+            $contentNode = $xp->query('ncx:content', $navPointNode)->item(0);
             $contentSource = $contentNode ? $contentNode->getAttribute('src') : '';
             $navPoint = new EpubNavPoint($id, $class, $playOrder, $label, $contentSource);
             $navPointList->addNavPoint($navPoint);
-            $childNavPointNodes = $navPointNode->getElementsByTagName('navPoint');
+            $childNavPointNodes = $xp->query('ncx:navPoint', $navPointNode);
             $childNavPoints = $navPoint->getChildren();
 
-            self::loadNavPoints($childNavPointNodes, $childNavPoints);
+            self::loadNavPoints($childNavPointNodes, $childNavPoints, $xp);
         }
     }
 
