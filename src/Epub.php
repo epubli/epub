@@ -5,6 +5,7 @@ namespace Epubli\Epub;
 use DOMDocument;
 use DOMElement;
 use DOMNodeList;
+use DOMText;
 use DOMXPath;
 use Epubli\Common\Tools\HTMLTools;
 use Exception;
@@ -623,6 +624,53 @@ class Epub
         $body = $dom->getElementsByTagName('body')->item(0) ?: $dom->documentElement;
 
         return $body->nodeValue;
+    }
+
+    /**
+     * Extract a part of the plain text contents from an XML file contained in the epub.
+     *
+     * @param string $file The XML file to load (path in zip archive)
+     * @param string|null $fragmentBegin ID of the element where to start reading the contents.
+     * @param string|null $fragmentEnd ID of the element where to stop reading the contents.
+     * @return string The plain text contents of that fragment.
+     * @throws Exception
+     */
+    public function getFragmentContents($file, $fragmentBegin = null, $fragmentEnd = null)
+    {
+        $dom = $this->loadZipXML($file, true, true);
+        // get the starting point
+        $xp = new DOMXPath($dom);
+        $node = $xp->query("//*[@id='$fragmentBegin']")->item(0)
+            ?: $dom->getElementsByTagName('body')->item(0)
+                ?: $dom->documentElement;
+
+        $contents = '';
+        // traverse DOM structure till end point is reached, accumulating the contents
+        while ($node && (!$fragmentEnd || !$node->hasAttributes() || $node->getAttribute('id') != $fragmentEnd)) {
+            if ($node instanceof DOMText) {
+                // when encountering a text node append its value to the contents
+                $contents .= $node->nodeValue;
+            }
+            if ($node->hasChildNodes()) {
+                // step into
+                $node = $node->firstChild;
+            } elseif ($node->nextSibling) {
+                $node = $node->nextSibling;
+            } else {
+                // step out
+                while ($node->parentNode && !$node->parentNode->nextSibling) {
+                    $node = $node->parentNode;
+                }
+                if ($node->parentNode) {
+                    $node = $node->parentNode->nextSibling;
+                }
+                else {
+                    $node = null;
+                }
+            }
+        }
+
+        return $contents;
     }
 
     /**

@@ -48,11 +48,20 @@ class EpubToc
     {
         return $this->navMap;
     }
+
+    /**
+     * @param $file
+     * @return array|EpubNavPoint[]
+     */
+    public function findNavPointsForFile($file)
+    {
+        return $this->getNavMap()->findNavPointsForFile($file);
+    }
 }
 
 class EpubNavPointList implements Iterator
 {
-    /** @var array */
+    /** @var array|EpubNavPoint[] */
     private $navPoints = [];
 
     public function __construct()
@@ -62,6 +71,23 @@ class EpubNavPointList implements Iterator
     public function addNavPoint(EpubNavPoint $navPoint)
     {
         $this->navPoints[] = $navPoint;
+    }
+
+    /**
+     * @param string $file
+     * @return array|EpubNavPoint[]
+     */
+    public function findNavPointsForFile($file)
+    {
+        $matches = [];
+        foreach ($this->navPoints as $navPoint) {
+            if ($navPoint->getContentSourceFile() == $file) {
+                $matches[] = $navPoint;
+                $childMatches = $navPoint->getChildren()->findNavPointsForFile($file);
+                $matches = array_merge($matches, $childMatches);
+            }
+        }
+        return $matches;
     }
 
     /**
