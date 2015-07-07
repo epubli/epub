@@ -83,7 +83,9 @@ class EpubNavPointList implements Iterator
         foreach ($this->navPoints as $navPoint) {
             if ($navPoint->getContentSourceFile() == $file) {
                 $matches[] = $navPoint;
-                $childMatches = $navPoint->getChildren()->findNavPointsForFile($file);
+            }
+            $childMatches = $navPoint->getChildren()->findNavPointsForFile($file);
+            if (count($childMatches)) {
                 $matches = array_merge($matches, $childMatches);
             }
         }
