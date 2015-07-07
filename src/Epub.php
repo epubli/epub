@@ -8,7 +8,7 @@ use DOMNodeList;
 use DOMText;
 use DOMXPath;
 use Epubli\Common\Tools\HTMLTools;
-use Exception;
+use Epubli\Exception\Exception;
 use ZipArchive;
 
 /**

@@ -2,6 +2,7 @@
 
 namespace Epubli\Epub;
 
+use Epubli\Exception\Exception;
 use PHPUnit_Framework_TestCase;
 
 /**
