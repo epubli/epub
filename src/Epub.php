@@ -579,7 +579,7 @@ class Epub
                 if (is_null($item)) {
                     throw new Exception('Item referenced in spine missing in manifest!');
                 }
-                $href = $item->getAttribute('href');
+                $href = urldecode($item->getAttribute('href'));
                 $mediaType = $item->getAttribute('media-type');
                 $this->spine->addItem(new EpubSpineItem($id, $href, $mediaType));
             }
