@@ -612,22 +612,7 @@ class Epub
     }
 
     /**
-     * Extract the plain text contents from an XML file contained in the epub.
-     *
-     * @param string $file The XML file to load (path in zip archive)
-     * @return string The plain text contents of that file.
-     * @throws Exception If that file does not exist.
-     */
-    public function getContents($file)
-    {
-        $dom = $this->loadZipXML($file, true, true);
-        $body = $dom->getElementsByTagName('body')->item(0) ?: $dom->documentElement;
-
-        return $body->nodeValue;
-    }
-
-    /**
-     * Extract a part of the plain text contents from an XML file contained in the epub.
+     * Extract (a part of) the plain text contents from an XML file contained in the epub.
      *
      * @param string $file The XML file to load (path in zip archive)
      * @param string|null $fragmentBegin ID of the element where to start reading the contents.
@@ -635,7 +620,7 @@ class Epub
      * @return string The plain text contents of that fragment.
      * @throws Exception
      */
-    public function getFragmentContents($file, $fragmentBegin = null, $fragmentEnd = null)
+    public function getContents($file, $fragmentBegin = null, $fragmentEnd = null)
     {
         $dom = $this->loadZipXML($file, true, true);
         // get the starting point
@@ -663,15 +648,20 @@ class Epub
                 $node = $node->nextSibling;
             } else {
                 // step out
-                while ($node->parentNode && !$node->parentNode->nextSibling) {
+                do {
                     $node = $node->parentNode;
                 }
-                if ($node->parentNode) {
-                    $node = $node->parentNode->nextSibling;
+                while ($node && !$node->nextSibling);
+                if ($node) {
+                    // node has next sibling, select that one
+                    if (HTMLTools::isBlockLevelElement($node->localName)) {
+                        // add whitespace between contents of adjacent blocks (see #9670)
+                        $contents .= PHP_EOL;
+                    }
+                    $node = $node->nextSibling;
                 }
                 else {
                     // reached end of DOM
-                    $node = null;
                     if ($fragmentEnd) {
                         throw new Exception("End of fragment not found: No element with ID $fragmentEnd in $file!");
                     }
