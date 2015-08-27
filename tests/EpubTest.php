@@ -351,4 +351,44 @@ class EpubTest extends PHPUnit_Framework_TestCase
             $contents
         );
     }
+
+    public function testContentsFragment1()
+    {
+        $contents = trim($this->epub->getContents('main13.xml', 'section_77331', 'section_77332'));
+        $this->assertEquals('Act III', $contents);
+    }
+
+    public function testContentsFragment2()
+    {
+        $contents = trim($this->epub->getContents('main13.xml', null, 'section_77332'));
+        $this->assertEquals('Act III', $contents);
+    }
+
+    public function testContentsFragment3()
+    {
+        $contents = trim($this->epub->getContents('main13.xml', 'section_77332'));
+        $this->assertStringStartsWith('SCENE I. A public place.', $contents);
+        $this->assertStringEndsWith(
+            'Mercy but murders, pardoning those that kill.'.PHP_EOL.PHP_EOL.'Exeunt',
+            $contents
+        );
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Begin of fragment not found:
+     */
+    public function testContentsStartFragmentException()
+    {
+        $this->epub->getContents('main0.xml', 'NonExistingElement');
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage End of fragment not found:
+     */
+    public function testContentsEndFragmentException()
+    {
+        $this->epub->getContents('main0.xml', null, 'NonExistingElement');
+    }
 }
