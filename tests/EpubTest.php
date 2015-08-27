@@ -346,6 +346,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertStringEndsWith('our toil shall strive to mend.', $contents);
         $contents = trim($this->epub->getContents('main1.xml'));
         $this->assertStringStartsWith('SCENE I. Verona. A public place.', $contents);
-        $this->assertStringEndsWith('I\'ll pay that doctrine, or else die in debt.'.PHP_EOL.'Exeunt', $contents);
+        $this->assertStringEndsWith(
+            'I\'ll pay that doctrine, or else die in debt.'.PHP_EOL.PHP_EOL.'Exeunt',
+            $contents
+        );
     }
 }
