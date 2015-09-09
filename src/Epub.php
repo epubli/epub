@@ -55,8 +55,23 @@ class Epub
         // open file
         $this->filename = $file;
         $this->zip = new ZipArchive();
-        if (!@$this->zip->open($this->filename)) {
-            throw new Exception('Failed to read epub file');
+        if (($result = @$this->zip->open($this->filename)) !== true) {
+            $msg = 'Failed to read epub file. ';
+            switch ($result) {
+                case ZipArchive::ER_INCONS:
+                    $msg .= 'Zip archive inconsistent.';
+                    break;
+                case ZipArchive::ER_NOZIP:
+                    $msg .= 'Not a zip archive.';
+                    break;
+                case ZipArchive::ER_OPEN:
+                    $msg .= 'Can’t open file.';
+                    break;
+                case ZipArchive::ER_READ:
+                    $msg .= 'Read error.';
+                    break;
+            }
+            throw new Exception($msg);
         }
 
         // read container data
@@ -555,6 +570,8 @@ class Epub
     }
 
     /**
+     * Get the spine structure of this Epub.
+     *
      * @return EpubSpine
      * @throws Exception
      */
@@ -588,6 +605,12 @@ class Epub
         return $this->spine;
     }
 
+    /**
+     * Get the table of contents structure of this Epub.
+     *
+     * @return EpubToc
+     * @throws Exception
+     */
     public function getTOC()
     {
         if (!$this->toc) {
@@ -791,8 +814,10 @@ class Epub
     }
 
     /**
+     * Get the path of the TOC file inside the Epub.
+     *
      * @param DOMElement $spineNode
-     * @return string
+     * @return string The path to the TOC file inside the Epub.
      * @throws Exception
      */
     private function getTOCFile(DOMElement $spineNode)
@@ -815,8 +840,11 @@ class Epub
     }
 
     /**
+     * Load navigation points from TOC XML DOM into TOC object structure.
+     *
      * @param DOMNodeList $navPointNodes List of nodes to load from.
      * @param EpubNavPointList $navPointList List structure to load into.
+     * @param DOMXPath $xp The XPath of the TOC document.
      */
     private static function loadNavPoints(DOMNodeList $navPointNodes, EpubNavPointList $navPointList, DOMXPath $xp)
     {
@@ -857,13 +885,15 @@ class Epub
      * I had to rely on this because otherwise xpath failed to find the newly
      * added nodes
      */
-    protected function reparse()
+    private function reparse()
     {
         $this->opfDom->loadXML($this->opfDom->saveXML());
         $this->opfXPath = new EpubDOMXPath($this->opfDom);
     }
 
     /**
+     * Load an XML file from the Epub/ZIP archive.
+     *
      * @param $path string The xml file to load from the zip archive.
      * @param bool $relativeToOPFDir If true, $path is considered relative to OPF directory, else to zip root
      * @param bool $isHTML If true, file contents is considered HTML.

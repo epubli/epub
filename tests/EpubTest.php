@@ -2,6 +2,7 @@
 
 namespace Epubli\Epub;
 
+use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Exception\Exception;
 use PHPUnit_Framework_TestCase;
 
@@ -20,10 +21,14 @@ class EpubTest extends PHPUnit_Framework_TestCase
     const TEST_EPUB = 'test.epub';
     const TEST_EPUB_COPY = 'test.copy.epub';
     const TEST_IMAGE = 'test.jpg';
+    const EMPTY_ZIP = 'empty.zip';
+    const BROKEN_ZIP = 'broken.zip';
 
     private $testEpub = __DIR__.DIRECTORY_SEPARATOR.self::TEST_EPUB;
     private $testEpubCopy = __DIR__.DIRECTORY_SEPARATOR.self::TEST_EPUB_COPY;
     private $testImage = __DIR__.DIRECTORY_SEPARATOR.self::TEST_IMAGE;
+    private $emptyZip = __DIR__.DIRECTORY_SEPARATOR.self::EMPTY_ZIP;
+    private $brokenZip = __DIR__.DIRECTORY_SEPARATOR.self::BROKEN_ZIP;
 
     protected function setUp()
     {
@@ -43,6 +48,56 @@ class EpubTest extends PHPUnit_Framework_TestCase
     protected function tearDown()
     {
         unlink($this->testEpubCopy);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Failed to read epub file. Not a zip archive.
+     */
+    public function testLoadNonZip()
+    {
+        new Epub($this->testImage);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Failed to read epub file. Zip archive inconsistent.
+     */
+    public function testLoadBrokenZip()
+    {
+        new Epub($this->brokenZip);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Failed to read epub file. Can’t open file.
+     */
+    public function testLoadMissingFile()
+    {
+        new Epub('/a/file/that/is/not_there.epub');
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Failed to read epub file. Read error.
+     */
+    public function testLoadDirectory()
+    {
+        new Epub(__DIR__);
+    }
+
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Failed to access epub container data: META-INF/container.xml
+     */
+    public function testLoadEmptyZip()
+    {
+        new Epub($this->emptyZip);
+    }
+
+    public function testFilename()
+    {
+        $this->assertEquals($this->testEpubCopy, $this->epub->getFilename());
     }
 
     public function testAuthors()
@@ -277,13 +332,6 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($cover['found'], 'OPS/images/cover.png');
         $this->assertEquals(strlen($cover['data']), 657911);
 
-        // delete cover
-        $this->epub->deleteCover();
-        $cover = $this->epub->getCover();
-        $this->assertEquals($cover['mime'], 'image/gif');
-        $this->assertEquals($cover['found'], false);
-        $this->assertEquals(strlen($cover['data']), 42);
-
         // set new cover (will return a not-found as it's not yet saved)
         $this->epub->setCover($this->testImage, 'image/jpeg');
         $cover = $this->epub->getCover();
@@ -299,6 +347,13 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($cover['mime'], 'image/jpeg');
         $this->assertEquals($cover['found'], 'OPS/php-epub-meta-cover.img');
         $this->assertEquals(strlen($cover['data']), filesize($this->testImage));
+
+        // delete cover
+        $this->epub->deleteCover();
+        $cover = $this->epub->getCover();
+        $this->assertEquals($cover['mime'], 'image/gif');
+        $this->assertEquals($cover['found'], false);
+        $this->assertEquals(strlen($cover['data']), 42);
     }
 
     public function testTOC()
@@ -307,6 +362,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Romeo and Juliet', $toc->getDocTitle());
         $this->assertEquals('Shakespeare, William', $toc->getDocAuthor());
         $navMap = $toc->getNavMap();
+        $this->assertEquals(8, $navMap->count());
 
         $navPoint = $navMap->first();
         /** @var EpubNavPoint $navPoint */
@@ -329,6 +385,23 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertCount(6, $navPoint->getChildren());
         $this->assertEquals('Prologue', $navPoint->getChildren()->first()->getNavLabel());
         $this->assertEquals('SCENE V. A hall in Capulet\'s house.', $navPoint->getChildren()->last()->getNavLabel());
+    }
+
+    public function testSpine()
+    {
+        $spine = $this->epub->getSpine();
+        $this->assertCount(31, $spine);
+        $this->assertEquals(31, $spine->count());
+        $items = $spine->getItems();
+        $this->assertCount(31, $items);
+
+        $this->assertEquals('cover', $spine->first()->getId());
+        $this->assertEquals(InternetMediaType::XHTML(), $spine->current()->getMediaType());
+        $spine->next();
+        $this->assertEquals('title.xml', $spine->current()->getHref());
+        $this->assertEquals('feedbooks', $spine->last()->getId());
+
+        $this->assertEquals('fb.ncx', $spine->getTOCSource());
     }
 
     /**
