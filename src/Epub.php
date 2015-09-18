@@ -12,7 +12,7 @@ use Epubli\Exception\Exception;
 use ZipArchive;
 
 /**
- * PHP EPUB Meta library
+ * EPUB library
  *
  * Source: https://github.com/splitbrain/php-epub-meta
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
@@ -33,7 +33,7 @@ class Epub
     private $opfDir;
     /** @var DOMDocument The DOM of the root (.opf) file */
     private $opfDom;
-    /** @var EpubDOMXPath The XPath object for the root (.opf) file */
+    /** @var EpubDomXPath The XPath object for the root (.opf) file */
     private $opfXPath;
     /** @var DOMDocument The DOM of the TOC (.ncx) file */
     private $tocDom;
@@ -75,10 +75,10 @@ class Epub
         }
 
         // read container data
-        $xml = $this->loadZipXML('META-INF/container.xml', false);
-        $xpath = new EpubDOMXPath($xml);
+        $xml = $this->loadZipXml('META-INF/container.xml', false);
+        $xpath = new EpubDomXPath($xml);
         $nodes = $xpath->query('//n:rootfiles/n:rootfile[@media-type="application/oebps-package+xml"]');
-        /** @var EpubDOMElement $node */
+        /** @var EpubDomElement $node */
         $node = $nodes->item(0);
         $rootFile = $node->attr('full-path');
         $this->opfFilename = basename($rootFile);
@@ -87,8 +87,8 @@ class Epub
         }
 
         // load metadata
-        $this->opfDom = $this->loadZipXML($this->opfFilename);
-        $this->opfXPath = new EpubDOMXPath($this->opfDom);
+        $this->opfDom = $this->loadZipXml($this->opfFilename);
+        $this->opfXPath = new EpubDomXPath($this->opfDom);
     }
 
     public function __destruct()
@@ -152,12 +152,12 @@ class Epub
         // delete existing nodes
         $nodes = $this->opfXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
         foreach ($nodes as $node) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $node->delete();
         }
 
         // add new nodes
-        /** @var EpubDOMElement $parent */
+        /** @var EpubDomElement $parent */
         $parent = $this->opfXPath->query('//opf:metadata')->item(0);
         foreach ($authors as $as => $name) {
             if (is_int($as)) {
@@ -187,7 +187,7 @@ class Epub
             $rolefix = true;
         }
         foreach ($nodes as $node) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $name = $node->nodeValueUnescaped;
             $as = $node->attr('opf:file-as');
             if (!$as) {
@@ -363,7 +363,7 @@ class Epub
      *
      * @param string $uuid
      */
-    public function setUUID($uuid)
+    public function setUuid($uuid)
     {
         $this->setIdentifier(['UUID', 'uuid', 'URN', 'urn'], $uuid);
     }
@@ -373,7 +373,7 @@ class Epub
      *
      * @return string
      */
-    public function getUUID()
+    public function getUuid()
     {
         return $this->getIdentifier(['uuid', 'urn']);
     }
@@ -383,7 +383,7 @@ class Epub
      *
      * @param string $uri
      */
-    public function setURI($uri)
+    public function setUri($uri)
     {
         $this->setIdentifier('uri', $uri);
     }
@@ -393,7 +393,7 @@ class Epub
      *
      * @return string
      */
-    public function getURI()
+    public function getUri()
     {
         return $this->getIdentifier('uri');
     }
@@ -403,7 +403,7 @@ class Epub
      *
      * @param string $isbn
      */
-    public function setISBN($isbn)
+    public function setIsbn($isbn)
     {
         $this->setIdentifier('isbn', $isbn);
     }
@@ -413,7 +413,7 @@ class Epub
      *
      * @return string
      */
-    public function getISBN()
+    public function getIsbn()
     {
         return $this->getIdentifier('isbn');
     }
@@ -440,13 +440,13 @@ class Epub
         // delete previous
         $nodes = $this->opfXPath->query('//opf:metadata/dc:subject');
         foreach ($nodes as $node) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $node->delete();
         }
         // add new ones
         $parent = $this->opfXPath->query('//opf:metadata')->item(0);
         foreach ($subjects as $subj) {
-            $node = new EpubDOMElement('dc:subject', $subj);
+            $node = new EpubDomElement('dc:subject', $subj);
             $parent->appendChild($node);
         }
 
@@ -484,19 +484,19 @@ class Epub
         // remove current pointer
         $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
         foreach ($nodes as $node) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $node->delete();
         }
         // remove previous manifest entries if they where made by us
         $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="'.self::COVER_NAME.'"]');
         foreach ($nodes as $node) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $node->delete();
         }
 
         if ($path) {
             // add pointer
-            /** @var EpubDOMElement $parent */
+            /** @var EpubDomElement $parent */
             $parent = $this->opfXPath->query('//opf:metadata')->item(0);
             $node = $parent->newChild('opf:meta');
             $node->attr('opf:name', 'cover');
@@ -536,7 +536,7 @@ class Epub
         if (!$nodes->length) {
             return $this->no_cover();
         }
-        /** @var EpubDOMElement $node */
+        /** @var EpubDomElement $node */
         $node = $nodes->item(0);
         $coverid = (String)$node->attr('opf:content');
         if (!$coverid) {
@@ -570,7 +570,7 @@ class Epub
     }
 
     /**
-     * Get the spine structure of this Epub.
+     * Get the spine structure of this EPUB.
      *
      * @return EpubSpine
      * @throws Exception
@@ -583,7 +583,7 @@ class Epub
             if (is_null($spineNode)) {
                 throw new Exception('No spine element found in epub!');
             }
-            $tocFile = $this->getTOCFile($spineNode);
+            $tocFile = $this->getTocFile($spineNode);
 
             $this->spine = new EpubSpine();
             $this->spine->setTOCSource($tocFile);
@@ -606,17 +606,17 @@ class Epub
     }
 
     /**
-     * Get the table of contents structure of this Epub.
+     * Get the table of contents structure of this EPUB.
      *
      * @return EpubToc
      * @throws Exception
      */
-    public function getTOC()
+    public function getToc()
     {
         if (!$this->toc) {
             if (!$this->tocDom) {
                 $tocFile = $this->getSpine()->getTOCSource();
-                $this->tocDom = $this->loadZipXML($tocFile);
+                $this->tocDom = $this->loadZipXml($tocFile);
             }
             $xp = new DOMXPath($this->tocDom);
             $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
@@ -645,7 +645,7 @@ class Epub
      */
     public function getContents($file, $fragmentBegin = null, $fragmentEnd = null)
     {
-        $dom = $this->loadZipXML($file, true, true);
+        $dom = $this->loadZipXml($file, true, true);
         // get the starting point
         $xp = new DOMXPath($dom);
         if ($fragmentBegin) {
@@ -714,7 +714,7 @@ class Epub
         // set value
         $nodes = $this->opfXPath->query($xpath);
         if ($nodes->length == 1) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $node = $nodes->item(0);
             if ($value === '') {
                 // the user wants to empty this value -> delete the node
@@ -727,13 +727,13 @@ class Epub
             // if there are multiple matching nodes for some reason delete
             // them. we'll replace them all with our own single one
             foreach ($nodes as $node) {
-                /** @var EpubDOMElement $node */
+                /** @var EpubDomElement $node */
                 $node->delete();
             }
             // re-add them
             if ($value) {
                 $parent = $this->opfXPath->query('//opf:metadata')->item(0);
-                $node = new EpubDOMElement($item, $value);
+                $node = new EpubDomElement($item, $value);
                 $node = $parent->appendChild($node);
                 if ($attribute) {
                     if (is_array($attributeValue)) {
@@ -766,7 +766,7 @@ class Epub
         // get value
         $nodes = $this->opfXPath->query($xpath);
         if ($nodes->length) {
-            /** @var EpubDOMElement $node */
+            /** @var EpubDomElement $node */
             $node = $nodes->item(0);
 
             return $node->nodeValueUnescaped;
@@ -814,13 +814,13 @@ class Epub
     }
 
     /**
-     * Get the path of the TOC file inside the Epub.
+     * Get the path of the TOC file inside the EPUB.
      *
      * @param DOMElement $spineNode
-     * @return string The path to the TOC file inside the Epub.
+     * @return string The path to the TOC file inside the EPUB.
      * @throws Exception
      */
-    private function getTOCFile(DOMElement $spineNode)
+    private function getTocFile(DOMElement $spineNode)
     {
         $tocId = $spineNode->getAttribute('toc');
         if (empty($tocId)) {
@@ -888,29 +888,29 @@ class Epub
     private function reparse()
     {
         $this->opfDom->loadXML($this->opfDom->saveXML());
-        $this->opfXPath = new EpubDOMXPath($this->opfDom);
+        $this->opfXPath = new EpubDomXPath($this->opfDom);
     }
 
     /**
-     * Load an XML file from the Epub/ZIP archive.
+     * Load an XML file from the EPUB/ZIP archive.
      *
      * @param $path string The xml file to load from the zip archive.
-     * @param bool $relativeToOPFDir If true, $path is considered relative to OPF directory, else to zip root
-     * @param bool $isHTML If true, file contents is considered HTML.
+     * @param bool $relativeToOpfDir If true, $path is considered relative to OPF directory, else to zip root
+     * @param bool $isHtml If true, file contents is considered HTML.
      * @return DOMDocument
      * @throws Exception
      */
-    private function loadZipXML($path, $relativeToOPFDir = true, $isHTML = false)
+    private function loadZipXml($path, $relativeToOpfDir = true, $isHtml = false)
     {
-        $data = $this->zip->getFromName(($relativeToOPFDir ? $this->opfDir : '').$path);
+        $data = $this->zip->getFromName(($relativeToOpfDir ? $this->opfDir : '').$path);
         if (!$data) {
             throw new Exception('Failed to access epub container data: '.$path);
         }
         $xml = new DOMDocument();
-        if ($isHTML) {
+        if ($isHtml) {
             $data = HTMLTools::convertEntitiesNamedToNumeric($data);
         } else {
-            $xml->registerNodeClass(DOMElement::class, EpubDOMElement::class);
+            $xml->registerNodeClass(DOMElement::class, EpubDomElement::class);
         }
         $xml->loadXML($data);
 
@@ -925,13 +925,13 @@ class Epub
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
  * @author Simon Schrape <simon@epubli.com> © 2015
  */
-class EpubDOMXPath extends DOMXPath
+class EpubDomXPath extends DOMXPath
 {
     public function __construct(DOMDocument $doc)
     {
         parent::__construct($doc);
 
-        if ($doc->documentElement instanceof EpubDOMElement) {
+        if ($doc->documentElement instanceof EpubDomElement) {
             foreach ($doc->documentElement->namespaces as $ns => $url) {
                 $this->registerNamespace($ns, $url);
             }
@@ -948,7 +948,7 @@ class EpubDOMXPath extends DOMXPath
  *
  * @property string $nodeValueUnescaped
  */
-class EpubDOMElement extends DOMElement
+class EpubDomElement extends DOMElement
 {
     public $namespaces = [
         'n' => 'urn:oasis:names:tc:opendocument:xmlns:container',
@@ -958,7 +958,7 @@ class EpubDOMElement extends DOMElement
 
     public function __construct($name, $value = '', $namespaceURI = '')
     {
-        list($ns, $name) = $this->splitns($name);
+        list($ns, $name) = $this->splitNamespacedName($name);
         $value = htmlspecialchars($value);
         if (!$namespaceURI && $ns) {
             $namespaceURI = $this->namespaces[$ns];
@@ -989,11 +989,11 @@ class EpubDOMElement extends DOMElement
      * Works with our epub namespaces and omits default namespaces
      * @param $name
      * @param string $value
-     * @return EpubDOMElement
+     * @return EpubDomElement
      */
     public function newChild($name, $value = '')
     {
-        list($ns, $local) = $this->splitns($name);
+        list($ns, $local) = $this->splitNamespacedName($name);
         $nsuri = '';
         if ($ns) {
             $nsuri = $this->namespaces[$ns];
@@ -1004,7 +1004,7 @@ class EpubDOMElement extends DOMElement
         }
 
         // this doesn't call the constructor: $node = $this->ownerDocument->createElement($name,$value);
-        $node = new EpubDOMElement($name, $value, $nsuri);
+        $node = new EpubDomElement($name, $value, $nsuri);
 
         return $this->appendChild($node);
     }
@@ -1015,7 +1015,7 @@ class EpubDOMElement extends DOMElement
      * @param  string $name
      * @return array  (namespace, name)
      */
-    public function splitns($name)
+    public function splitNamespacedName($name)
     {
         $list = explode(':', $name, 2);
         if (count($list) < 2) {
@@ -1033,7 +1033,7 @@ class EpubDOMElement extends DOMElement
      */
     public function attr($attr, $value = null)
     {
-        list($ns, $attr) = $this->splitns($attr);
+        list($ns, $attr) = $this->splitNamespacedName($attr);
 
         $nsuri = '';
         if ($ns) {

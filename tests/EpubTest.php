@@ -241,61 +241,61 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->epub->setUniqueIdentifier('134htb34tp089h1b');
         $this->assertEquals('134htb34tp089h1b', $this->epub->getUniqueIdentifier());
         // this should have affected the same node that is found when looking for UUID/URN scheme
-        $this->assertEquals('134htb34tp089h1b', $this->epub->getUUID());
+        $this->assertEquals('134htb34tp089h1b', $this->epub->getUuid());
     }
 
-    public function testUUID()
+    public function testUuid()
     {
         // get current value
-        $this->assertEquals('urn:uuid:7d38d098-4234-11e1-97b6-001cc0a62c0b', $this->epub->getUUID());
+        $this->assertEquals('urn:uuid:7d38d098-4234-11e1-97b6-001cc0a62c0b', $this->epub->getUuid());
 
         // set new value
-        $this->epub->setUUID('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->getUUID());
+        $this->epub->setUuid('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getUuid());
 
         // delete current value
-        $this->epub->setUUID('');
-        $this->assertEquals('', $this->epub->getUUID());
+        $this->epub->setUuid('');
+        $this->assertEquals('', $this->epub->getUuid());
 
         // check escaping
-        $this->epub->setUUID('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getUUID());
+        $this->epub->setUuid('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getUuid());
     }
 
-    public function testURI()
+    public function testUri()
     {
         // get current value
-        $this->assertEquals('http://www.feedbooks.com/book/2936', $this->epub->getURI());
+        $this->assertEquals('http://www.feedbooks.com/book/2936', $this->epub->getUri());
 
         // set new value
-        $this->epub->setURI('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->getURI());
+        $this->epub->setUri('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getUri());
 
         // delete current value
-        $this->epub->setURI('');
-        $this->assertEquals('', $this->epub->getURI());
+        $this->epub->setUri('');
+        $this->assertEquals('', $this->epub->getUri());
 
         // check escaping
-        $this->epub->setURI('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getURI());
+        $this->epub->setUri('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getUri());
     }
 
-    public function testISBN()
+    public function testIsbn()
     {
         // get current value
-        $this->assertEquals('', $this->epub->getISBN());
+        $this->assertEquals('', $this->epub->getIsbn());
 
         // set new value
-        $this->epub->setISBN('Foo Bar');
-        $this->assertEquals('Foo Bar', $this->epub->getISBN());
+        $this->epub->setIsbn('Foo Bar');
+        $this->assertEquals('Foo Bar', $this->epub->getIsbn());
 
         // delete current value
-        $this->epub->setISBN('');
-        $this->assertEquals('', $this->epub->getISBN());
+        $this->epub->setIsbn('');
+        $this->assertEquals('', $this->epub->getIsbn());
 
         // check escaping
-        $this->epub->setISBN('Foo&nbsp;Bar');
-        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getISBN());
+        $this->epub->setIsbn('Foo&nbsp;Bar');
+        $this->assertEquals('Foo&nbsp;Bar', $this->epub->getIsbn());
     }
 
     public function testSubject()
@@ -356,9 +356,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(strlen($cover['data']), 42);
     }
 
-    public function testTOC()
+    public function testToc()
     {
-        $toc = $this->epub->getTOC();
+        $toc = $this->epub->getToc();
         $this->assertEquals('Romeo and Juliet', $toc->getDocTitle());
         $this->assertEquals('Shakespeare, William', $toc->getDocAuthor());
         $navMap = $toc->getNavMap();
