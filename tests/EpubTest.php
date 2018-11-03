@@ -70,7 +70,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to read epub file. Can’t open file.
+     * @expectedExceptionMessage Failed to read epub file. No such file.
      */
     public function testLoadMissingFile()
     {
@@ -79,7 +79,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to read epub file. Read error.
+     * @expectedExceptionMessage Failed to read epub file.
+     * We cannot expect a more specific exception message. ZipArchive::open returns 28
+     * which is not known as an error code.
      */
     public function testLoadDirectory()
     {

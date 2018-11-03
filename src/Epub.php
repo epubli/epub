@@ -57,20 +57,34 @@ class Epub
         if (($result = @$this->zip->open($this->filename)) !== true) {
             $msg = 'Failed to read epub file. ';
             switch ($result) {
-                case ZipArchive::ER_INCONS:
-                    $msg .= 'Zip archive inconsistent.';
-                    break;
-                case ZipArchive::ER_NOZIP:
-                    $msg .= 'Not a zip archive.';
-                    break;
-                case ZipArchive::ER_OPEN:
-                    $msg .= 'Can’t open file.';
+                case ZipArchive::ER_SEEK:
+                    $msg .= 'Seek error.';
                     break;
                 case ZipArchive::ER_READ:
                     $msg .= 'Read error.';
                     break;
+                case ZipArchive::ER_NOENT:
+                    $msg .= 'No such file.';
+                    break;
+                case ZipArchive::ER_OPEN:
+                    $msg .= 'Can’t open file.';
+                    break;
+                case ZipArchive::ER_MEMORY:
+                    $msg .= 'Memory allocation failure.';
+                    break;
+                case ZipArchive::ER_INVAL:
+                    $msg .= 'Invalid argument.';
+                    break;
+                case ZipArchive::ER_NOZIP:
+                    $msg .= 'Not a zip archive.';
+                    break;
+                case ZipArchive::ER_INCONS:
+                    $msg .= 'Zip archive inconsistent.';
+                    break;
+                default:
+                    $msg .= "Unknown error: $result";
             }
-            throw new Exception($msg);
+            throw new Exception($msg, $result);
         }
 
         // read container data
