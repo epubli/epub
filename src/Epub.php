@@ -90,6 +90,9 @@ class Epub
             $this->zip->addFromString($path, file_get_contents($this->imageToAdd));
             $this->imageToAdd = '';
         }
+        // close and reopen zip archive
+        $this->zip->close();
+        $this->zip->open($this->file);
     }
 
     /**
