@@ -19,7 +19,7 @@ class Spine implements Iterator
     /**
      * @return string
      */
-    public function getTOCSource()
+    public function getTocSource()
     {
         return $this->tocSource;
     }
@@ -27,7 +27,7 @@ class Spine implements Iterator
     /**
      * @param string $tocSource
      */
-    public function setTOCSource($tocSource)
+    public function setTocSource($tocSource)
     {
         $this->tocSource = $tocSource;
     }

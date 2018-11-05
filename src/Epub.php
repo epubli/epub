@@ -606,7 +606,7 @@ class Epub
             $tocFile = $this->getTocFile($spineNode);
 
             $this->spine = new Spine();
-            $this->spine->setTOCSource($tocFile);
+            $this->spine->setTocSource($tocFile);
             $itemRefNodes = $spineNode->getElementsByTagName('itemref');
             foreach ($itemRefNodes as $itemRef) {
                 /** @var DOMElement $itemRef */
@@ -635,7 +635,7 @@ class Epub
     {
         if (!$this->toc) {
             if (!$this->tocDom) {
-                $tocFile = $this->getSpine()->getTOCSource();
+                $tocFile = $this->getSpine()->getTocSource();
                 $this->tocDom = $this->loadZipXml($tocFile);
             }
             $xp = new DOMXPath($this->tocDom);
