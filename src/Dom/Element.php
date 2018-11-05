@@ -1,6 +1,6 @@
 <?php
 
-namespace Epubli\Epub;
+namespace Epubli\Epub\Dom;
 
 use DOMElement;
 
@@ -13,7 +13,7 @@ use DOMElement;
  *
  * @property string $nodeValueUnescaped
  */
-class EpubDomElement extends DOMElement
+class Element extends DOMElement
 {
     public $namespaces = [
         'n' => 'urn:oasis:names:tc:opendocument:xmlns:container',
@@ -52,9 +52,11 @@ class EpubDomElement extends DOMElement
      * Create and append a new child
      *
      * Works with our epub namespaces and omits default namespaces
+     *
      * @param $name
      * @param string $value
-     * @return EpubDomElement
+     *
+     * @return Element
      */
     public function newChild($name, $value = '')
     {
@@ -69,7 +71,7 @@ class EpubDomElement extends DOMElement
         }
 
         // this doesn't call the constructor: $node = $this->ownerDocument->createElement($name,$value);
-        $node = new EpubDomElement($name, $value, $nsuri);
+        $node = new Element($name, $value, $nsuri);
 
         return $this->appendChild($node);
     }

@@ -1,26 +1,26 @@
 <?php
 
-namespace Epubli\Epub;
+namespace Epubli\Epub\Toc;
 
 /**
  * EPUB TOC structure
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class EpubToc
+class Toc
 {
     /** @var string */
     private $docTitle;
     /** @var string */
     private $docAuthor;
-    /** @var EpubNavPointList */
+    /** @var NavPointList */
     private $navMap;
 
     public function __construct($title, $author)
     {
         $this->docTitle = $title;
         $this->docAuthor = $author;
-        $this->navMap = new EpubNavPointList();
+        $this->navMap = new NavPointList();
     }
 
     /**
@@ -40,7 +40,7 @@ class EpubToc
     }
 
     /**
-     * @return EpubNavPointList
+     * @return NavPointList
      */
     public function getNavMap()
     {
@@ -49,7 +49,7 @@ class EpubToc
 
     /**
      * @param $file
-     * @return array|EpubNavPoint[]
+     * @return array|NavPoint[]
      */
     public function findNavPointsForFile($file)
     {

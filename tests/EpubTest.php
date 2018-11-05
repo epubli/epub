@@ -3,6 +3,7 @@
 namespace Epubli\Epub;
 
 use Epubli\Common\Enum\InternetMediaType;
+use Epubli\Epub\Toc\NavPoint;
 use Epubli\Exception\Exception;
 use PHPUnit_Framework_TestCase;
 
@@ -367,7 +368,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(8, $navMap->count());
 
         $navPoint = $navMap->first();
-        /** @var EpubNavPoint $navPoint */
+        /** @var NavPoint $navPoint */
         $this->assertEquals('level1-titlepage', $navPoint->getId());
         $this->assertEquals('titlepage', $navPoint->getClass());
         $this->assertEquals('1', $navPoint->getPlayOrder());
@@ -378,7 +379,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $navMap->next();
         $navMap->next();
         $navPoint = $navMap->current();
-        /** @var EpubNavPoint $navPoint */
+        /** @var NavPoint $navPoint */
         $this->assertEquals('sec77303', $navPoint->getId());
         $this->assertEquals('section', $navPoint->getClass());
         $this->assertEquals('3', $navPoint->getPlayOrder());

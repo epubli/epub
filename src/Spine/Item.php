@@ -1,6 +1,6 @@
 <?php
 
-namespace Epubli\Epub;
+namespace Epubli\Epub\Spine;
 
 use Epubli\Common\Enum\InternetMediaType;
 
@@ -9,7 +9,7 @@ use Epubli\Common\Enum\InternetMediaType;
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class EpubSpineItem
+class Item
 {
     /** @var string */
     private $id;

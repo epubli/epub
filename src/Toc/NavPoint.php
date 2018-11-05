@@ -1,13 +1,13 @@
 <?php
 
-namespace Epubli\Epub;
+namespace Epubli\Epub\Toc;
 
 /**
  * An EPUB TOC navigation point.
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class EpubNavPoint
+class NavPoint
 {
     /** @var string */
     private $id;
@@ -21,7 +21,7 @@ class EpubNavPoint
     private $contentSourceFile;
     /** @var string */
     private $contentSourceFragment;
-    /** @var EpubNavPointList */
+    /** @var NavPointList */
     private $children;
 
     /**
@@ -40,7 +40,7 @@ class EpubNavPoint
         $contentSourceParts = explode('#', $contentSource, 2);
         $this->contentSourceFile = $contentSourceParts[0];
         $this->contentSourceFragment = isset($contentSourceParts[1]) ? $contentSourceParts[1] : null;
-        $this->children = new EpubNavPointList();
+        $this->children = new NavPointList();
     }
 
     /**
@@ -100,7 +100,7 @@ class EpubNavPoint
     }
 
     /**
-     * @return EpubNavPointList
+     * @return NavPointList
      */
     public function getChildren()
     {

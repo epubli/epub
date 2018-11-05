@@ -1,56 +1,59 @@
 <?php
 
-namespace Epubli\Epub;
+namespace Epubli\Epub\Spine;
 
 use Iterator;
 
 /**
- * A list of EPUB TOC navigation points.
+ * EPUB spine structure
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class EpubNavPointList implements Iterator
+class Spine implements Iterator
 {
-    /** @var array|EpubNavPoint[] */
-    private $navPoints = [];
+    /** @var string */
+    private $tocSource;
+    /** @var array|Item[] */
+    private $items = [];
 
-    public function __construct()
+    /**
+     * @return string
+     */
+    public function getTOCSource()
     {
-    }
-
-    public function addNavPoint(EpubNavPoint $navPoint)
-    {
-        $this->navPoints[] = $navPoint;
+        return $this->tocSource;
     }
 
     /**
-     * @param string $file
-     * @return array|EpubNavPoint[]
+     * @param string $tocSource
      */
-    public function findNavPointsForFile($file)
+    public function setTOCSource($tocSource)
     {
-        $matches = [];
-        foreach ($this->navPoints as $navPoint) {
-            if ($navPoint->getContentSourceFile() == $file) {
-                $matches[] = $navPoint;
-            }
-            $childMatches = $navPoint->getChildren()->findNavPointsForFile($file);
-            if (count($childMatches)) {
-                $matches = array_merge($matches, $childMatches);
-            }
-        }
-        return $matches;
+        $this->tocSource = $tocSource;
+    }
+
+    /**
+     * @return array|Item[]
+     */
+    public function getItems()
+    {
+        return $this->items;
+    }
+
+    public function addItem(Item $item)
+    {
+        $this->items[] = $item;
     }
 
     /**
      * (PHP 5 &gt;= 5.0.0)<br/>
      * Return the current element
      * @link http://php.net/manual/en/iterator.current.php
-     * @return EpubNavPoint
+     * @return Item
      */
     public function current()
     {
-        return current($this->navPoints);
+        return current($this->items);
     }
 
     /**
@@ -61,7 +64,7 @@ class EpubNavPointList implements Iterator
      */
     public function next()
     {
-        next($this->navPoints);
+        next($this->items);
     }
 
     /**
@@ -72,7 +75,7 @@ class EpubNavPointList implements Iterator
      */
     public function key()
     {
-        return key($this->navPoints);
+        return key($this->items);
     }
 
     /**
@@ -84,7 +87,7 @@ class EpubNavPointList implements Iterator
      */
     public function valid()
     {
-        return (bool)current($this->navPoints);
+        return (bool)current($this->items);
     }
 
     /**
@@ -95,27 +98,27 @@ class EpubNavPointList implements Iterator
      */
     public function rewind()
     {
-        reset($this->navPoints);
+        reset($this->items);
     }
 
     /**
-     * @return EpubNavPoint
+     * @return Item
      */
     public function first()
     {
-        return reset($this->navPoints);
+        return reset($this->items);
     }
 
     /**
-     * @return EpubNavPoint
+     * @return Item
      */
     public function last()
     {
-        return end($this->navPoints);
+        return end($this->items);
     }
 
     public function count()
     {
-        return count($this->navPoints);
+        return count($this->items);
     }
 }

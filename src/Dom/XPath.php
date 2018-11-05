@@ -1,6 +1,6 @@
 <?php
 
-namespace Epubli\Epub;
+namespace Epubli\Epub\Dom;
 
 use DOMDocument;
 use DOMXPath;
@@ -12,13 +12,13 @@ use DOMXPath;
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
  * @author Simon Schrape <simon@epubli.com> © 2015
  */
-class EpubDomXPath extends DOMXPath
+class XPath extends DOMXPath
 {
     public function __construct(DOMDocument $doc)
     {
         parent::__construct($doc);
 
-        if ($doc->documentElement instanceof EpubDomElement) {
+        if ($doc->documentElement instanceof Element) {
             foreach ($doc->documentElement->namespaces as $ns => $url) {
                 $this->registerNamespace($ns, $url);
             }

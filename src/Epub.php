@@ -8,6 +8,13 @@ use DOMNodeList;
 use DOMText;
 use DOMXPath;
 use Epubli\Common\Tools\HTMLTools;
+use Epubli\Epub\Dom\Element as EpubDomElement;
+use Epubli\Epub\Dom\XPath as EpubDomXPath;
+use Epubli\Epub\Spine\Item as SpineItem;
+use Epubli\Epub\Spine\Spine;
+use Epubli\Epub\Toc\NavPoint as TocNavPoint;
+use Epubli\Epub\Toc\NavPointList as TocNavPointList;
+use Epubli\Epub\Toc\Toc;
 use Epubli\Exception\Exception;
 use ZipArchive;
 
@@ -38,9 +45,9 @@ class Epub
     private $tocDom;
     /** @var string The file path to the cover image if set */
     private $newCoverImage = '';
-    /** @var EpubSpine The spine structure of this epub */
+    /** @var Spine The spine structure of this epub */
     private $spine;
-    /** @var EpubToc The TOC structure of this epub */
+    /** @var Toc The TOC structure of this epub */
     private $toc;
 
     /**
@@ -585,7 +592,7 @@ class Epub
     /**
      * Get the spine structure of this EPUB.
      *
-     * @return EpubSpine
+     * @return Spine
      * @throws Exception
      */
     public function getSpine()
@@ -598,7 +605,7 @@ class Epub
             }
             $tocFile = $this->getTocFile($spineNode);
 
-            $this->spine = new EpubSpine();
+            $this->spine = new Spine();
             $this->spine->setTOCSource($tocFile);
             $itemRefNodes = $spineNode->getElementsByTagName('itemref');
             foreach ($itemRefNodes as $itemRef) {
@@ -611,7 +618,7 @@ class Epub
                 }
                 $href = urldecode($item->getAttribute('href'));
                 $mediaType = $item->getAttribute('media-type');
-                $this->spine->addItem(new EpubSpineItem($id, $href, $mediaType));
+                $this->spine->addItem(new SpineItem($id, $href, $mediaType));
             }
         }
 
@@ -621,7 +628,7 @@ class Epub
     /**
      * Get the table of contents structure of this EPUB.
      *
-     * @return EpubToc
+     * @return Toc
      * @throws Exception
      */
     public function getToc()
@@ -637,7 +644,7 @@ class Epub
             $title = $titleNode ? $titleNode->nodeValue : '';
             $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
             $author = $authorNode ? $authorNode->nodeValue : '';
-            $this->toc = new EpubToc($title, $author);
+            $this->toc = new Toc($title, $author);
 
             $navPointNodes = $xp->query('//ncx:navMap/ncx:navPoint');
 
@@ -856,10 +863,10 @@ class Epub
      * Load navigation points from TOC XML DOM into TOC object structure.
      *
      * @param DOMNodeList $navPointNodes List of nodes to load from.
-     * @param EpubNavPointList $navPointList List structure to load into.
+     * @param TocNavPointList $navPointList List structure to load into.
      * @param DOMXPath $xp The XPath of the TOC document.
      */
-    private static function loadNavPoints(DOMNodeList $navPointNodes, EpubNavPointList $navPointList, DOMXPath $xp)
+    private static function loadNavPoints(DOMNodeList $navPointNodes, TocNavPointList $navPointList, DOMXPath $xp)
     {
         foreach ($navPointNodes as $navPointNode) {
             /** @var DOMElement $navPointNode */
@@ -871,7 +878,7 @@ class Epub
             /** @var DOMElement $contentNode */
             $contentNode = $xp->query('ncx:content', $navPointNode)->item(0);
             $contentSource = $contentNode ? $contentNode->getAttribute('src') : '';
-            $navPoint = new EpubNavPoint($id, $class, $playOrder, $label, $contentSource);
+            $navPoint = new TocNavPoint($id, $class, $playOrder, $label, $contentSource);
             $navPointList->addNavPoint($navPoint);
             $childNavPointNodes = $xp->query('ncx:navPoint', $navPointNode);
             $childNavPoints = $navPoint->getChildren();
