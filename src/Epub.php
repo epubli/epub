@@ -28,6 +28,8 @@ class Epub
 {
     /** Identifier for cover image inserted by this lib. */
     const COVER_ID = 'epubli-epub-cover';
+    /** Identifier for title page inserted by this lib. */
+    const TITLE_PAGE_ID = 'epubli-epub-titlepage';
 
     /** @var string The file path of the epub file */
     private $filename;
@@ -574,6 +576,75 @@ class Epub
     }
 
     /**
+     * Add a title page with the cover image to the EPUB.
+     *
+     * @param string $templatePath The path to the template file. Defaults to an XHTML file contained in this library.
+     */
+    public function addCoverImageTitlePage($templatePath = __DIR__ . '/../templates/titlepage.xhtml')
+    {
+        $xhtmlFilename = self::TITLE_PAGE_ID . '.xhtml';
+
+        // add title page file to zip
+        $template = file_get_contents($templatePath);
+        $xhtml = strtr($template, ['{{ title }}' => $this->getTitle(), '{{ coverPath }}' => $this->getCoverPath(true)]);
+        $this->zip->addFromString($this->opfDir . $xhtmlFilename, $xhtml);
+
+        // prepend title page file to manifest
+        $parent = $this->opfXPath->query('//opf:manifest')->item(0);
+        $node = new EpubDomElement('opf:item');
+        $parent->insertBefore($node, $parent->firstChild);
+        $node->attr('id', self::TITLE_PAGE_ID);
+        $node->attr('opf:href', $xhtmlFilename);
+        $node->attr('opf:media-type', 'application/xhtml+xml');
+
+        // prepend title page spine item
+        $parent = $this->opfXPath->query('//opf:spine')->item(0);
+        $node = new EpubDomElement('opf:itemref');
+        $parent->insertBefore($node, $parent->firstChild);
+        $node->attr('idref', self::TITLE_PAGE_ID);
+
+        // prepend title page guide reference
+        $parent = $this->opfXPath->query('//opf:guide')->item(0);
+        $node = new EpubDomElement('opf:reference');
+        $parent->insertBefore($node, $parent->firstChild);
+        $node->attr('opf:href', $xhtmlFilename);
+        $node->attr('opf:type', 'cover');
+        $node->attr('opf:title', 'Title Page');
+    }
+
+    /**
+     * Remove the title page added by this library (determined by a certain manifest item ID).
+     */
+    public function removeTitlePage()
+    {
+        $xhtmlFilename = self::TITLE_PAGE_ID . '.xhtml';
+
+        // remove title page file from zip
+        $this->zip->deleteName($this->opfDir . $xhtmlFilename);
+
+        // remove title page file from manifest
+        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="' . self::TITLE_PAGE_ID . '"]');
+        foreach ($nodes as $node) {
+            /** @var EpubDomElement $node */
+            $node->delete();
+        }
+
+        // remove title page spine item
+        $nodes = $this->opfXPath->query('//opf:spine/opf:itemref[@idref="' . self::TITLE_PAGE_ID . '"]');
+        foreach ($nodes as $node) {
+            /** @var EpubDomElement $node */
+            $node->delete();
+        }
+
+        // remove title page guide reference
+        $nodes = $this->opfXPath->query('//opf:guide/opf:reference[@href="' . $xhtmlFilename . '"]');
+        foreach ($nodes as $node) {
+            /** @var EpubDomElement $node */
+            $node->delete();
+        }
+    }
+
+    /**
      * Get the spine structure of this EPUB.
      *
      * @return Spine
@@ -916,9 +987,10 @@ class Epub
     /**
      * Get the internal path of the cover image file.
      *
+     * @param bool $relativeToOpfDir Whether to return the path relative to the OPF directory.
      * @return null|string
      */
-    private function getCoverPath()
+    private function getCoverPath($relativeToOpfDir = false)
     {
         $coverId = $this->getCoverId();
         if (!$coverId) {
@@ -932,7 +1004,7 @@ class Epub
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
 
-        return $this->opfDir . $node->attr('opf:href');
+        return ($relativeToOpfDir ? '' : $this->opfDir) . $node->attr('opf:href');
     }
 
     /**

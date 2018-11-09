@@ -25,11 +25,11 @@ class EpubTest extends PHPUnit_Framework_TestCase
     const EMPTY_ZIP = 'empty.zip';
     const BROKEN_ZIP = 'broken.zip';
 
-    private $testEpub = __DIR__.DIRECTORY_SEPARATOR.self::TEST_EPUB;
-    private $testEpubCopy = __DIR__.DIRECTORY_SEPARATOR.self::TEST_EPUB_COPY;
-    private $testImage = __DIR__.DIRECTORY_SEPARATOR.self::TEST_IMAGE;
-    private $emptyZip = __DIR__.DIRECTORY_SEPARATOR.self::EMPTY_ZIP;
-    private $brokenZip = __DIR__.DIRECTORY_SEPARATOR.self::BROKEN_ZIP;
+    private $testEpub = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_EPUB;
+    private $testEpubCopy = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_EPUB_COPY;
+    private $testImage = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_IMAGE;
+    private $emptyZip = __DIR__ . DIRECTORY_SEPARATOR . self::EMPTY_ZIP;
+    private $brokenZip = __DIR__ . DIRECTORY_SEPARATOR . self::BROKEN_ZIP;
 
     protected function setUp()
     {
@@ -347,6 +347,22 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertNull($cover);
     }
 
+    public function testTitlePage()
+    {
+        // read current cover
+        $this->epub->addCoverImageTitlePage();
+        $this->epub->save();
+        $spine = $this->epub->getSpine();
+        $titlePage = $spine->first();
+
+        $this->assertEquals('epubli-epub-titlepage.xhtml', $titlePage->getHref());
+        $this->assertEquals('epubli-epub-titlepage', $titlePage->getId());
+        $this->assertEquals('application/xhtml+xml', (string)$titlePage->getMediaType());
+
+        // We expect an empty string since there is only an image but no text on that page.
+        $this->assertEmpty(trim($this->epub->getContents($titlePage->getHref())));
+    }
+
     public function testToc()
     {
         $toc = $this->epub->getToc();
@@ -411,7 +427,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $contents = trim($this->epub->getContents('main1.xml'));
         $this->assertStringStartsWith('SCENE I. Verona. A public place.', $contents);
         $this->assertStringEndsWith(
-            'I\'ll pay that doctrine, or else die in debt.'.PHP_EOL.PHP_EOL.'Exeunt',
+            'I\'ll pay that doctrine, or else die in debt.' . PHP_EOL . PHP_EOL . 'Exeunt',
             $contents
         );
     }
@@ -433,7 +449,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $contents = trim($this->epub->getContents('main13.xml', 'section_77332'));
         $this->assertStringStartsWith('SCENE I. A public place.', $contents);
         $this->assertStringEndsWith(
-            'Mercy but murders, pardoning those that kill.'.PHP_EOL.PHP_EOL.'Exeunt',
+            'Mercy but murders, pardoning those that kill.' . PHP_EOL . PHP_EOL . 'Exeunt',
             $contents
         );
     }
