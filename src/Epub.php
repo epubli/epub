@@ -26,8 +26,8 @@ use ZipArchive;
  */
 class Epub
 {
-    /** Name for cover images inserted by this lib. */
-    const COVER_NAME = 'php-epub-meta-cover';
+    /** Identifier for cover image inserted by this lib. */
+    const COVER_ID = 'epubli-epub-cover';
 
     /** @var string The file path of the epub file */
     private $filename;
@@ -132,7 +132,7 @@ class Epub
         $this->zip->addFromString($this->opfDir.$this->opfFilename, $this->opfDom->saveXML());
         // add the cover image
         if ($this->newCoverImage) {
-            $path = $this->opfDir.self::COVER_NAME.'.img'; // image path is relative to meta file
+            $path = $this->opfDir.self::COVER_ID.'.img'; // image path is relative to meta file
 
             $this->zip->addFile($this->newCoverImage, $path);
             $this->newCoverImage = '';
@@ -508,7 +508,7 @@ class Epub
             $node->delete();
         }
         // remove previous manifest entries if they where made by us
-        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="'.self::COVER_NAME.'"]');
+        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="'.self::COVER_ID.'"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
@@ -520,13 +520,13 @@ class Epub
             $parent = $this->opfXPath->query('//opf:metadata')->item(0);
             $node = $parent->newChild('opf:meta');
             $node->attr('opf:name', 'cover');
-            $node->attr('opf:content', self::COVER_NAME);
+            $node->attr('opf:content', self::COVER_ID);
 
             // add manifest
             $parent = $this->opfXPath->query('//opf:manifest')->item(0);
             $node = $parent->newChild('opf:item');
-            $node->attr('id', self::COVER_NAME);
-            $node->attr('opf:href', self::COVER_NAME.'.img');
+            $node->attr('id', self::COVER_ID);
+            $node->attr('opf:href', self::COVER_ID.'.img');
             $node->attr('opf:media-type', $mime);
 
             // remember path for save action
