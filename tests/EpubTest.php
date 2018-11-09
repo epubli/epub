@@ -331,32 +331,20 @@ class EpubTest extends PHPUnit_Framework_TestCase
     {
         // read current cover
         $cover = $this->epub->getCover();
-        $this->assertEquals($cover['mime'], 'image/png');
-        $this->assertEquals($cover['found'], 'OPS/images/cover.png');
-        $this->assertEquals(strlen($cover['data']), 657911);
+        $this->assertEquals(657911, strlen($cover));
 
-        // set new cover (will return a not-found as it's not yet saved)
+        // change cover
         $this->epub->setCover($this->testImage, 'image/jpeg');
-        $cover = $this->epub->getCover();
-        $this->assertEquals($cover['mime'], 'image/jpeg');
-        $this->assertEquals($cover['found'], 'OPS/php-epub-meta-cover.img');
-        $this->assertEquals(strlen($cover['data']), 0);
-
-        // save
         $this->epub->save();
 
         // read recently changed cover
         $cover = $this->epub->getCover();
-        $this->assertEquals($cover['mime'], 'image/jpeg');
-        $this->assertEquals($cover['found'], 'OPS/php-epub-meta-cover.img');
-        $this->assertEquals(strlen($cover['data']), filesize($this->testImage));
+        $this->assertEquals(filesize($this->testImage), strlen($cover));
 
         // delete cover
         $this->epub->deleteCover();
         $cover = $this->epub->getCover();
-        $this->assertEquals($cover['mime'], 'image/gif');
-        $this->assertEquals($cover['found'], false);
-        $this->assertEquals(strlen($cover['data']), 42);
+        $this->assertNull($cover);
     }
 
     public function testToc()

@@ -532,46 +532,30 @@ class Epub
     /**
      * Get the cover image
      *
-     * Returns an associative array with the following keys:
-     *
-     *   mime  - filetype (usually image/jpeg)
-     *   data  - the binary image data
-     *   found - the internal path, or false if no image is set in epub
-     *
-     * When no image is set in the epub file, the binary data for a transparent
-     * GIF pixel is returned.
-     *
-     * @return array
+     * @return string|null The binary image data or null if no image exists.
      */
     public function getCover()
     {
         $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
         if (!$nodes->length) {
-            return $this->no_cover();
+            return null;
         }
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
         $coverid = (String)$node->attr('opf:content');
         if (!$coverid) {
-            return $this->no_cover();
+            return null;
         }
 
         $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="'.$coverid.'"]');
         if (!$nodes->length) {
-            return $this->no_cover();
+            return null;
         }
         $node = $nodes->item(0);
-        $mime = $node->attr('opf:media-type');
         $path = $node->attr('opf:href');
         $path = $this->opfDir.$path; // image path is relative to meta file
 
-        $data = $this->zip->getFromName($path);
-
-        return array(
-            'mime' => $mime,
-            'data' => $data,
-            'found' => $path
-        );
+        return $this->zip->getFromName($path);
     }
 
     /**
@@ -880,30 +864,6 @@ class Epub
     }
 
     /**
-     * Return a not found response for Cover()
-     */
-    private function no_cover()
-    {
-        return array(
-            'data' => base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7'),
-            'mime' => 'image/gif',
-            'found' => false
-        );
-    }
-
-    /**
-     * Reparse the DOM tree
-     *
-     * I had to rely on this because otherwise xpath failed to find the newly
-     * added nodes
-     */
-    private function reparse()
-    {
-        $this->opfDom->loadXML($this->opfDom->saveXML());
-        $this->opfXPath = new EpubDomXPath($this->opfDom);
-    }
-
-    /**
      * Load an XML file from the EPUB/ZIP archive.
      *
      * @param $path string The xml file to load from the zip archive.
@@ -927,5 +887,17 @@ class Epub
         $xml->loadXML($data);
 
         return $xml;
+    }
+
+    /**
+     * Reparse the DOM tree
+     *
+     * I had to rely on this because otherwise xpath failed to find the newly
+     * added nodes
+     */
+    private function reparse()
+    {
+        $this->opfDom->loadXML($this->opfDom->saveXML());
+        $this->opfXPath = new EpubDomXPath($this->opfDom);
     }
 }
