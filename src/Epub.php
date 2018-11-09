@@ -43,8 +43,6 @@ class Epub
     private $opfXPath;
     /** @var DOMDocument The DOM of the TOC (.ncx) file */
     private $tocDom;
-    /** @var string The file path to the cover image if set */
-    private $newCoverImage = '';
     /** @var Spine The spine structure of this epub */
     private $spine;
     /** @var Toc The TOC structure of this epub */
@@ -130,13 +128,6 @@ class Epub
     public function save()
     {
         $this->zip->addFromString($this->opfDir.$this->opfFilename, $this->opfDom->saveXML());
-        // add the cover image
-        if ($this->newCoverImage) {
-            $path = $this->opfDir.self::COVER_ID.'.img'; // image path is relative to meta file
-
-            $this->zip->addFile($this->newCoverImage, $path);
-            $this->newCoverImage = '';
-        }
         // close and reopen zip archive
         $this->zip->close();
         $this->zip->open($this->filename);
@@ -492,46 +483,48 @@ class Epub
     /**
      * Set the cover image
      *
-     * When adding a new image getCover() returns no or old data because the
-     * image contents are not in the epub file, yet. The image will be added when
-     * the save() method is called.
-     *
      * @param string $path local filesystem path to a new cover image
      * @param string $mime mime type of the given file
      */
     public function setCover($path, $mime)
     {
-        // remove current pointer
+        // remove any cover image file added by us
+        $this->zip->deleteName($this->opfDir . self::COVER_ID . '.img');
+
+        // remove metadata cover pointer
         $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
         }
+
         // remove previous manifest entries if they where made by us
-        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="'.self::COVER_ID.'"]');
+        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="' . self::COVER_ID . '"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
         }
 
-        if ($path) {
-            // add pointer
-            /** @var EpubDomElement $parent */
-            $parent = $this->opfXPath->query('//opf:metadata')->item(0);
-            $node = $parent->newChild('opf:meta');
-            $node->attr('opf:name', 'cover');
-            $node->attr('opf:content', self::COVER_ID);
-
-            // add manifest
-            $parent = $this->opfXPath->query('//opf:manifest')->item(0);
-            $node = $parent->newChild('opf:item');
-            $node->attr('id', self::COVER_ID);
-            $node->attr('opf:href', self::COVER_ID.'.img');
-            $node->attr('opf:media-type', $mime);
-
-            // remember path for save action
-            $this->newCoverImage = $path;
+        if (!$path) {
+            return;
         }
+
+        // add metadata cover pointer
+        /** @var EpubDomElement $parent */
+        $parent = $this->opfXPath->query('//opf:metadata')->item(0);
+        $node = $parent->newChild('opf:meta');
+        $node->attr('opf:name', 'cover');
+        $node->attr('opf:content', self::COVER_ID);
+
+        // add manifest item
+        $parent = $this->opfXPath->query('//opf:manifest')->item(0);
+        $node = $parent->newChild('opf:item');
+        $node->attr('id', self::COVER_ID);
+        $node->attr('opf:href', self::COVER_ID . '.img');
+        $node->attr('opf:media-type', $mime);
+
+        // add the cover image
+        $this->zip->addFile($path, $this->opfDir . self::COVER_ID . '.img');
 
         $this->reparse();
     }
@@ -725,7 +718,6 @@ class Epub
      * @param bool|string $attribute Attribute name
      * @param bool|string $attributeValue Attribute value
      * @param bool $caseSensitive
-     * @return string
      */
     private function setMeta($item, $value, $attribute = false, $attributeValue = false, $caseSensitive = true)
     {
