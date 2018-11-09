@@ -481,13 +481,18 @@ class Epub
     }
 
     /**
-     * Set the cover image
+     * Remove the cover image
      *
-     * @param string $path local filesystem path to a new cover image
-     * @param string $mime mime type of the given file
+     * If the actual image file was added by this library it will be removed. Otherwise only the
+     * reference to it is removed from the metadata, since the same image might be referenced
+     * by other parts of the epub file.
      */
-    public function setCover($path, $mime)
+    public function clearCover()
     {
+        if (!$this->hasCover()) {
+            return;
+        }
+
         // remove any cover image file added by us
         $this->zip->deleteName($this->opfDir . self::COVER_ID . '.img');
 
@@ -504,6 +509,19 @@ class Epub
             /** @var EpubDomElement $node */
             $node->delete();
         }
+
+        $this->reparse();
+    }
+
+    /**
+     * Set the cover image
+     *
+     * @param string $path local filesystem path to a new cover image
+     * @param string $mime mime type of the given file
+     */
+    public function setCover($path, $mime)
+    {
+        $this->clearCover();
 
         if (!$path) {
             return;
@@ -536,34 +554,28 @@ class Epub
      */
     public function getCover()
     {
-        $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
-        if (!$nodes->length) {
-            return null;
-        }
-        /** @var EpubDomElement $node */
-        $node = $nodes->item(0);
-        $coverid = (String)$node->attr('opf:content');
-        if (!$coverid) {
-            return null;
-        }
+        $path = $this->getCoverPath();
 
-        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="'.$coverid.'"]');
-        if (!$nodes->length) {
-            return null;
-        }
-        $node = $nodes->item(0);
-        $path = $node->attr('opf:href');
-        $path = $this->opfDir.$path; // image path is relative to meta file
+        return $path ? $this->zip->getFromName($path) : null;
+    }
 
-        return $this->zip->getFromName($path);
+    /**
+     * Whether a cover image meta entry does exist.
+     *
+     * @return bool
+     */
+    public function hasCover()
+    {
+        return !empty($this->getCoverId());
     }
 
     /**
      * Delete the cover image
+     * @deprecated Use clearCover() instead.
      */
     public function deleteCover()
     {
-        $this->setCover('', '');
+        $this->clearCover();
     }
 
     /**
@@ -887,6 +899,45 @@ class Epub
         $xml->loadXML($data);
 
         return $xml;
+    }
+
+    /**
+     * Get the identifier of the cover image manifest item.
+     *
+     * @return null|string
+     */
+    private function getCoverId()
+    {
+        $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
+        if (!$nodes->length) {
+            return null;
+        }
+        /** @var EpubDomElement $node */
+        $node = $nodes->item(0);
+
+        return (String)$node->attr('opf:content');
+    }
+
+    /**
+     * Get the internal path of the cover image file.
+     *
+     * @return null|string
+     */
+    private function getCoverPath()
+    {
+        $coverId = $this->getCoverId();
+        if (!$coverId) {
+            return null;
+        }
+
+        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="' . $coverId . '"]');
+        if (!$nodes->length) {
+            return null;
+        }
+        /** @var EpubDomElement $node */
+        $node = $nodes->item(0);
+
+        return $this->opfDir . $node->attr('opf:href');
     }
 
     /**
