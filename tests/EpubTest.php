@@ -342,7 +342,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(filesize($this->testImage), strlen($cover));
 
         // delete cover
-        $this->epub->deleteCover();
+        $this->epub->clearCover();
         $cover = $this->epub->getCover();
         $this->assertNull($cover);
     }

@@ -521,11 +521,15 @@ class Epub
      */
     public function setCover($path, $mime)
     {
-        $this->clearCover();
-
         if (!$path) {
-            return;
+            throw new \InvalidArgumentException('Parameter $path must not be empty!');
         }
+
+        if (!is_readable($path)) {
+            throw new \InvalidArgumentException("Cannot add $path as new cover image since that file is not readable!");
+        }
+
+        $this->clearCover();
 
         // add metadata cover pointer
         /** @var EpubDomElement $parent */
@@ -567,15 +571,6 @@ class Epub
     public function hasCover()
     {
         return !empty($this->getCoverId());
-    }
-
-    /**
-     * Delete the cover image
-     * @deprecated Use clearCover() instead.
-     */
-    public function deleteCover()
-    {
-        $this->clearCover();
     }
 
     /**
