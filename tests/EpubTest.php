@@ -2,6 +2,7 @@
 
 namespace Epubli\Epub;
 
+use DOMDocument;
 use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Epub\Toc\NavPoint;
 use Epubli\Exception\Exception;
@@ -16,20 +17,29 @@ use PHPUnit_Framework_TestCase;
  */
 class EpubTest extends PHPUnit_Framework_TestCase
 {
-    /** @var Epub */
-    protected $epub;
-
     const TEST_EPUB = 'test.epub';
     const TEST_EPUB_COPY = 'test.copy.epub';
     const TEST_IMAGE = 'test.jpg';
     const EMPTY_ZIP = 'empty.zip';
     const BROKEN_ZIP = 'broken.zip';
+    const MARKUP_XML_1 = 'markup.1.xml';
+    const MARKUP_XML_2 = 'markup.2.xml';
+    const MARKUP_XML_3 = 'markup.3.xml';
+    const MARKUP_XML_4 = 'markup.4.xml';
+    const MARKUP_XML_5 = 'markup.5.xml';
 
+    /** @var Epub */
+    private $epub;
     private $testEpub = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_EPUB;
     private $testEpubCopy = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_EPUB_COPY;
     private $testImage = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_IMAGE;
     private $emptyZip = __DIR__ . DIRECTORY_SEPARATOR . self::EMPTY_ZIP;
     private $brokenZip = __DIR__ . DIRECTORY_SEPARATOR . self::BROKEN_ZIP;
+    private $markup1 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_1;
+    private $markup2 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_2;
+    private $markup3 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_3;
+    private $markup4 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_4;
+    private $markup5 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_5;
 
     protected function setUp()
     {
@@ -470,5 +480,34 @@ class EpubTest extends PHPUnit_Framework_TestCase
     public function testContentsEndFragmentException()
     {
         $this->epub->getContents('main0.xml', null, 'NonExistingElement');
+    }
+
+    /**
+     * @dataProvider provideMarkupTestParameters
+     * @param string $referenceFile
+     * @param string $internalFile
+     * @param string $fragmentBegin
+     * @param string $fragmentEnd
+     * @throws Exception
+     */
+    public function testContentsMarkup($referenceFile, $internalFile, $fragmentBegin = null, $fragmentEnd = null)
+    {
+        $contents = $this->epub->getContents($internalFile, $fragmentBegin, $fragmentEnd, true);
+        $extracted = new DOMDocument();
+        $extracted->loadXML($contents);
+        $reference = new DOMDocument();
+        $reference->load($referenceFile);
+        $this->assertEqualXMLStructure($reference->documentElement, $extracted->documentElement);
+    }
+
+    public function provideMarkupTestParameters()
+    {
+        return [
+            [$this->markup1, 'main0.xml'],
+            [$this->markup2, 'main1.xml'],
+            [$this->markup3, 'main13.xml', 'section_77331', 'section_77332'],
+            [$this->markup4, 'main13.xml', null, 'section_77332'],
+            [$this->markup5, 'main13.xml', 'section_77332'],
+        ];
     }
 }
