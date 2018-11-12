@@ -21,13 +21,13 @@ class Item
     /**
      * @param string $id
      * @param string $href
-     * @param string|InternetMediaType $mediaType
+     * @param InternetMediaType|null $mediaType
      */
-    public function __construct($id, $href, $mediaType = InternetMediaType::XHTML)
+    public function __construct($id, $href, InternetMediaType $mediaType = null)
     {
         $this->id = $id;
         $this->href = $href;
-        $this->mediaType = new InternetMediaType((string)$mediaType);
+        $this->mediaType = $mediaType ?: InternetMediaType::XHTML();
     }
 
     /**

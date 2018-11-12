@@ -7,6 +7,7 @@ use DOMElement;
 use DOMNodeList;
 use DOMText;
 use DOMXPath;
+use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
@@ -672,7 +673,7 @@ class Epub
                     throw new Exception('Item referenced in spine missing in manifest!');
                 }
                 $href = urldecode($item->getAttribute('href'));
-                $mediaType = $item->getAttribute('media-type');
+                $mediaType = new InternetMediaType($item->getAttribute('media-type'));
                 $this->spine->addItem(new SpineItem($id, $href, $mediaType));
             }
         }
