@@ -7,7 +7,7 @@ use DOMElement;
 use DOMNodeList;
 use DOMText;
 use DOMXPath;
-use Epubli\Common\Tools\HTMLTools;
+use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
 use Epubli\Epub\Spine\Item as SpineItem;
@@ -752,7 +752,7 @@ class Epub
                 while ($node && !$node->nextSibling);
                 if ($node) {
                     // node has next sibling, select that one
-                    if (HTMLTools::isBlockLevelElement($node->localName)) {
+                    if (HtmlTools::isBlockLevelElement($node->localName)) {
                         // add whitespace between contents of adjacent blocks (see #9670)
                         $contents .= PHP_EOL;
                     }
@@ -958,7 +958,7 @@ class Epub
         }
         $xml = new DOMDocument();
         if ($isHtml) {
-            $data = HTMLTools::convertEntitiesNamedToNumeric($data);
+            $data = HtmlTools::convertEntitiesNamedToNumeric($data);
         } else {
             $xml->registerNodeClass(DOMElement::class, EpubDomElement::class);
         }

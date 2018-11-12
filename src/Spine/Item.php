@@ -27,7 +27,7 @@ class Item
     {
         $this->id = $id;
         $this->href = $href;
-        $this->mediaType = InternetMediaType::get($mediaType);
+        $this->mediaType = new InternetMediaType((string)$mediaType);
     }
 
     /**

@@ -41,7 +41,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@bitbucket.org:epubli/common.git"
+            "url": "https://github.com/epubli/common.git"
         }
     ]
 }
