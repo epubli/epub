@@ -17,48 +17,38 @@ use PHPUnit_Framework_TestCase;
  */
 class EpubTest extends PHPUnit_Framework_TestCase
 {
-    const TEST_EPUB = 'test.epub';
-    const TEST_EPUB_COPY = 'test.copy.epub';
-    const TEST_IMAGE = 'test.jpg';
-    const EMPTY_ZIP = 'empty.zip';
-    const BROKEN_ZIP = 'broken.zip';
-    const MARKUP_XML_1 = 'markup.1.xml';
-    const MARKUP_XML_2 = 'markup.2.xml';
-    const MARKUP_XML_3 = 'markup.3.xml';
-    const MARKUP_XML_4 = 'markup.4.xml';
-    const MARKUP_XML_5 = 'markup.5.xml';
+    const TEST_EPUB = __DIR__ . '/test.epub';
+    const TEST_EPUB_COPY = __DIR__ . '/test.copy.epub';
+    const TEST_IMAGE = __DIR__ . '/test.jpg';
+    const EMPTY_ZIP = __DIR__ . '/empty.zip';
+    const BROKEN_ZIP = __DIR__ . '/broken.zip';
+    const MARKUP_XML_1 = __DIR__ . '/markup.1.xml';
+    const MARKUP_XML_2 = __DIR__ . '/markup.2.xml';
+    const MARKUP_XML_3 = __DIR__ . '/markup.3.xml';
+    const MARKUP_XML_4 = __DIR__ . '/markup.4.xml';
+    const MARKUP_XML_5 = __DIR__ . '/markup.5.xml';
 
     /** @var Epub */
     private $epub;
-    private $testEpub = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_EPUB;
-    private $testEpubCopy = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_EPUB_COPY;
-    private $testImage = __DIR__ . DIRECTORY_SEPARATOR . self::TEST_IMAGE;
-    private $emptyZip = __DIR__ . DIRECTORY_SEPARATOR . self::EMPTY_ZIP;
-    private $brokenZip = __DIR__ . DIRECTORY_SEPARATOR . self::BROKEN_ZIP;
-    private $markup1 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_1;
-    private $markup2 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_2;
-    private $markup3 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_3;
-    private $markup4 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_4;
-    private $markup5 = __DIR__ . DIRECTORY_SEPARATOR . self::MARKUP_XML_5;
 
     protected function setUp()
     {
         // sometime I might have accidentally broken the test file
-        if (filesize($this->testEpub) != 768780) {
+        if (filesize(self::TEST_EPUB) != 768780) {
             die('test.epub has wrong size, make sure it\'s unmodified');
         }
 
         // we work on a copy to test saving
-        if (!copy($this->testEpub, $this->testEpubCopy)) {
+        if (!copy(self::TEST_EPUB, self::TEST_EPUB_COPY)) {
             die('failed to create copy of the test book');
         }
 
-        $this->epub = new Epub($this->testEpubCopy);
+        $this->epub = new Epub(self::TEST_EPUB_COPY);
     }
 
     protected function tearDown()
     {
-        unlink($this->testEpubCopy);
+        unlink(self::TEST_EPUB_COPY);
     }
 
     /**
@@ -67,7 +57,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
      */
     public function testLoadNonZip()
     {
-        new Epub($this->testImage);
+        new Epub(self::TEST_IMAGE);
     }
 
     /**
@@ -76,7 +66,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
      */
     public function testLoadBrokenZip()
     {
-        new Epub($this->brokenZip);
+        new Epub(self::BROKEN_ZIP);
     }
 
     /**
@@ -105,12 +95,12 @@ class EpubTest extends PHPUnit_Framework_TestCase
      */
     public function testLoadEmptyZip()
     {
-        new Epub($this->emptyZip);
+        new Epub(self::EMPTY_ZIP);
     }
 
     public function testFilename()
     {
-        $this->assertEquals($this->testEpubCopy, $this->epub->getFilename());
+        $this->assertEquals(self::TEST_EPUB_COPY, $this->epub->getFilename());
     }
 
     public function testAuthors()
@@ -344,12 +334,12 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(657911, strlen($cover));
 
         // change cover
-        $this->epub->setCover($this->testImage, 'image/jpeg');
+        $this->epub->setCover(self::TEST_IMAGE, 'image/jpeg');
         $this->epub->save();
 
         // read recently changed cover
         $cover = $this->epub->getCover();
-        $this->assertEquals(filesize($this->testImage), strlen($cover));
+        $this->assertEquals(filesize(self::TEST_IMAGE), strlen($cover));
 
         // delete cover
         $this->epub->clearCover();
@@ -503,11 +493,11 @@ class EpubTest extends PHPUnit_Framework_TestCase
     public function provideMarkupTestParameters()
     {
         return [
-            [$this->markup1, 'main0.xml'],
-            [$this->markup2, 'main1.xml'],
-            [$this->markup3, 'main13.xml', 'section_77331', 'section_77332'],
-            [$this->markup4, 'main13.xml', null, 'section_77332'],
-            [$this->markup5, 'main13.xml', 'section_77332'],
+            [self::MARKUP_XML_1, 'main0.xml'],
+            [self::MARKUP_XML_2, 'main1.xml'],
+            [self::MARKUP_XML_3, 'main13.xml', 'section_77331', 'section_77332'],
+            [self::MARKUP_XML_4, 'main13.xml', null, 'section_77332'],
+            [self::MARKUP_XML_5, 'main13.xml', 'section_77332'],
         ];
     }
 }
