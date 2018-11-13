@@ -17,16 +17,16 @@ use PHPUnit_Framework_TestCase;
  */
 class EpubTest extends PHPUnit_Framework_TestCase
 {
-    const TEST_EPUB = __DIR__ . '/test.epub';
-    const TEST_EPUB_COPY = __DIR__ . '/test.copy.epub';
-    const TEST_IMAGE = __DIR__ . '/test.jpg';
-    const EMPTY_ZIP = __DIR__ . '/empty.zip';
-    const BROKEN_ZIP = __DIR__ . '/broken.zip';
-    const MARKUP_XML_1 = __DIR__ . '/markup.1.xml';
-    const MARKUP_XML_2 = __DIR__ . '/markup.2.xml';
-    const MARKUP_XML_3 = __DIR__ . '/markup.3.xml';
-    const MARKUP_XML_4 = __DIR__ . '/markup.4.xml';
-    const MARKUP_XML_5 = __DIR__ . '/markup.5.xml';
+    const TEST_EPUB = __DIR__ . '/data/test.epub';
+    const TEST_EPUB_COPY = __DIR__ . '/data/test.copy.epub';
+    const TEST_IMAGE = __DIR__ . '/data/test.jpg';
+    const EMPTY_ZIP = __DIR__ . '/data/empty.zip';
+    const BROKEN_ZIP = __DIR__ . '/data/broken.zip';
+    const MARKUP_XML_1 = __DIR__ . '/data/markup.1.xml';
+    const MARKUP_XML_2 = __DIR__ . '/data/markup.2.xml';
+    const MARKUP_XML_3 = __DIR__ . '/data/markup.3.xml';
+    const MARKUP_XML_4 = __DIR__ . '/data/markup.4.xml';
+    const MARKUP_XML_5 = __DIR__ . '/data/markup.5.xml';
 
     /** @var Epub */
     private $epub;
