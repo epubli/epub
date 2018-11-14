@@ -96,9 +96,8 @@ class Epub
         }
 
         // read container data
-        $xml = $this->loadZipXml('META-INF/container.xml', false);
-        $xpath = new EpubDomXPath($xml);
-        $nodes = $xpath->query('//n:rootfiles/n:rootfile[@media-type="application/oebps-package+xml"]');
+        $containerXpath = new EpubDomXPath($this->loadZipXml('META-INF/container.xml', false));
+        $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
         $rootFile = $node->attr('full-path');

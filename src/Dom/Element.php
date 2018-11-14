@@ -16,7 +16,7 @@ use DOMElement;
 class Element extends DOMElement
 {
     public $namespaces = [
-        'n' => 'urn:oasis:names:tc:opendocument:xmlns:container',
+        'ocf' => 'urn:oasis:names:tc:opendocument:xmlns:container',
         'opf' => 'http://www.idpf.org/2007/opf',
         'dc' => 'http://purl.org/dc/elements/1.1/'
     ];
@@ -82,7 +82,7 @@ class Element extends DOMElement
      * @param  string $name
      * @return array  (namespace, name)
      */
-    public function splitNamespacedName($name)
+    private function splitNamespacedName($name)
     {
         $list = explode(':', $name, 2);
         if (count($list) < 2) {
