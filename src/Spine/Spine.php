@@ -2,6 +2,8 @@
 
 namespace Epubli\Epub\Spine;
 
+use ArrayAccess;
+use Epubli\Exception\NotSupportedException;
 use Iterator;
 
 /**
@@ -9,7 +11,7 @@ use Iterator;
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class Spine implements Iterator
+class Spine implements Iterator, ArrayAccess
 {
     /** @var string */
     private $tocSource;
@@ -120,5 +122,50 @@ class Spine implements Iterator
     public function count()
     {
         return count($this->items);
+    }
+
+    /**
+     * Whether a offset exists
+     * @link https://php.net/manual/en/arrayaccess.offsetexists.php
+     * @param int $offset An offset to check for.
+     * @return boolean true on success or false on failure.
+     */
+    public function offsetExists($offset)
+    {
+        return isset($this->items[$offset]);
+    }
+
+    /**
+     * Offset to retrieve
+     * @link https://php.net/manual/en/arrayaccess.offsetget.php
+     * @param int $offset The offset to retrieve.
+     * @return Item
+     */
+    public function offsetGet($offset)
+    {
+        return $this->items[$offset];
+    }
+
+    /**
+     * Offset to set
+     * @link https://php.net/manual/en/arrayaccess.offsetset.php
+     * @param mixed $offset The offset to assign the value to.
+     * @param mixed $value The value to set.
+     * @throws NotSupportedException
+     */
+    public function offsetSet($offset, $value)
+    {
+        throw new NotSupportedException("Only reading array access is supported!");
+    }
+
+    /**
+     * Offset to unset
+     * @link https://php.net/manual/en/arrayaccess.offsetunset.php
+     * @param mixed $offset The offset to unset.
+     * @throws NotSupportedException
+     */
+    public function offsetUnset($offset)
+    {
+        throw new NotSupportedException("Only reading array access is supported!");
     }
 }
