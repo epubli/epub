@@ -10,7 +10,7 @@ use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
-use Epubli\Epub\Spine\Item as SpineItem;
+use Epubli\Epub\Manifest\Item as SpineItem;
 use Epubli\Epub\Spine\Spine;
 use Epubli\Epub\Toc\NavPoint as TocNavPoint;
 use Epubli\Epub\Toc\NavPointList as TocNavPointList;

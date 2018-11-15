@@ -1,6 +1,6 @@
 <?php
 
-namespace Epubli\Epub\Spine;
+namespace Epubli\Epub\Manifest;
 
 use DOMDocument;
 use DOMElement;
@@ -11,7 +11,7 @@ use Epubli\Common\Tools\HtmlTools;
 use Epubli\Exception\Exception;
 
 /**
- * An item of the EPUB spine.
+ * An item of the EPUB manifest.
  *
  * @author Simon Schrape <simon@epubli.com>
  */

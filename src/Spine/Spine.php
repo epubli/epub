@@ -3,6 +3,7 @@
 namespace Epubli\Epub\Spine;
 
 use ArrayAccess;
+use Epubli\Epub\Manifest\Item;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
 
