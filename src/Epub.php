@@ -32,29 +32,29 @@ class Epub
     /** Identifier for title page inserted by this lib. */
     const TITLE_PAGE_ID = 'epubli-epub-titlepage';
 
-    /** @var string The file path of the epub file */
+    /** @var string The file path of the EPUB file */
     private $filename;
-    /** @var ZipArchive The the epub file loaded as zip archive */
+    /** @var ZipArchive The the EPUB file loaded as zip archive */
     private $zip;
-    /** @var string The filename the root (.opf) file */
-    private $opfFilename;
-    /** @var string The (archive local) directory containing the root (.opf) file */
-    private $opfDir;
-    /** @var DOMDocument The DOM of the root (.opf) file */
-    private $opfDom;
+    /** @var string The filename of the package (.opf) file */
+    private $packageFile;
+    /** @var string The (archive local) directory containing the package (.opf) file */
+    private $packageDir;
+    /** @var DOMDocument The DOM of the package (.opf) file */
+    private $packageDom;
     /** @var EpubDomXPath The XPath object for the root (.opf) file */
-    private $opfXPath;
+    private $packageXPath;
     /** @var DOMDocument The DOM of the TOC (.ncx) file */
     private $tocDom;
-    /** @var Spine The spine structure of this epub */
+    /** @var Spine The spine structure of this EPUB */
     private $spine;
-    /** @var Toc The TOC structure of this epub */
+    /** @var Toc The TOC structure of this EPUB */
     private $toc;
 
     /**
      * Constructor
      *
-     * @param string $file path to epub file to work on
+     * @param string $file path to EPUB file to work on
      * @throws Exception if metadata could not be loaded
      */
     public function __construct($file)
@@ -63,7 +63,7 @@ class Epub
         $this->filename = $file;
         $this->zip = new ZipArchive();
         if (($result = @$this->zip->open($this->filename)) !== true) {
-            $msg = 'Failed to read epub file. ';
+            $msg = 'Failed to read EPUB file. ';
             switch ($result) {
                 case ZipArchive::ER_SEEK:
                     $msg .= 'Seek error.';
@@ -98,17 +98,17 @@ class Epub
         // read container data
         $containerXpath = new EpubDomXPath($this->loadZipXml('META-INF/container.xml', false));
         $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
-        /** @var EpubDomElement $node */
         $node = $nodes->item(0);
-        $rootFile = $node->getAttrib('full-path');
-        $this->opfFilename = basename($rootFile);
-        if ($rootFile != $this->opfFilename) {
-            $this->opfDir = dirname($rootFile).DIRECTORY_SEPARATOR;
+        $rootFile = $node->getAttribute('full-path');
+        $this->packageFile = basename($rootFile);
+        $this->packageDir = dirname($rootFile);
+        if ($this->packageDir) {
+            $this->packageDir .= DIRECTORY_SEPARATOR;
         }
 
         // load metadata
-        $this->opfDom = $this->loadZipXml($this->opfFilename);
-        $this->opfXPath = new EpubDomXPath($this->opfDom);
+        $this->packageDom = $this->loadZipXml($this->packageFile);
+        $this->packageXPath = new EpubDomXPath($this->packageDom);
     }
 
     public function __destruct()
@@ -129,7 +129,7 @@ class Epub
      */
     public function save()
     {
-        $this->zip->addFromString($this->opfDir.$this->opfFilename, $this->opfDom->saveXML());
+        $this->zip->addFromString($this->packageDir.$this->packageFile, $this->packageDom->saveXML());
         // close and reopen zip archive
         $this->zip->close();
         $this->zip->open($this->filename);
@@ -163,7 +163,7 @@ class Epub
         }
 
         // delete existing nodes
-        $nodes = $this->opfXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
+        $nodes = $this->packageXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
@@ -171,7 +171,7 @@ class Epub
 
         // add new nodes
         /** @var EpubDomElement $parent */
-        $parent = $this->opfXPath->query('//opf:metadata')->item(0);
+        $parent = $this->packageXPath->query('//opf:metadata')->item(0);
         foreach ($authors as $as => $name) {
             if (is_int($as)) {
                 $as = $name;
@@ -193,10 +193,10 @@ class Epub
     {
         $rolefix = false;
         $authors = array();
-        $nodes = $this->opfXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
+        $nodes = $this->packageXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
         if ($nodes->length == 0) {
             // no nodes where found, let's try again without role
-            $nodes = $this->opfXPath->query('//opf:metadata/dc:creator');
+            $nodes = $this->packageXPath->query('//opf:metadata/dc:creator');
             $rolefix = true;
         }
         foreach ($nodes as $node) {
@@ -317,7 +317,7 @@ class Epub
     }
 
     /**
-     * Set an identifier in the opf file’s meta section.
+     * Set an identifier in the package file’s meta section.
      *
      * @param string|array $idScheme The identifier’s scheme. If an array is given
      * all matching identifiers are replaced by one with the first value as scheme.
@@ -330,7 +330,7 @@ class Epub
     }
 
     /**
-     * Set an identifier from the opf file’s meta section.
+     * Set an identifier from the package file’s meta section.
      *
      * @param string|array $idScheme The identifier’s scheme. If an array is given
      * the scheme can be any of its values.
@@ -349,7 +349,7 @@ class Epub
      */
     public function setUniqueIdentifier($value)
     {
-        $idRef = $this->opfDom->documentElement->getAttribute('unique-identifier');
+        $idRef = $this->packageDom->documentElement->getAttribute('unique-identifier');
         $this->setMeta('dc:identifier', $value, 'id', $idRef);
     }
 
@@ -361,7 +361,7 @@ class Epub
      */
     public function getUniqueIdentifier($normalize = false)
     {
-        $idRef = $this->opfDom->documentElement->getAttribute('unique-identifier');
+        $idRef = $this->packageDom->documentElement->getAttribute('unique-identifier');
         $idVal = $this->getMeta('dc:identifier', 'id', $idRef);
         if ($normalize) {
             $idVal = strtolower($idVal);
@@ -451,13 +451,13 @@ class Epub
         }
 
         // delete previous
-        $nodes = $this->opfXPath->query('//opf:metadata/dc:subject');
+        $nodes = $this->packageXPath->query('//opf:metadata/dc:subject');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
         }
         // add new ones
-        $parent = $this->opfXPath->query('//opf:metadata')->item(0);
+        $parent = $this->packageXPath->query('//opf:metadata')->item(0);
         foreach ($subjects as $subj) {
             $node = new EpubDomElement('dc:subject', $subj);
             $parent->appendChild($node);
@@ -474,7 +474,7 @@ class Epub
     public function getSubjects()
     {
         $subjects = [];
-        $nodes = $this->opfXPath->query('//opf:metadata/dc:subject');
+        $nodes = $this->packageXPath->query('//opf:metadata/dc:subject');
         foreach ($nodes as $node) {
             $subjects[] = $node->nodeValueUnescaped;
         }
@@ -487,7 +487,7 @@ class Epub
      *
      * If the actual image file was added by this library it will be removed. Otherwise only the
      * reference to it is removed from the metadata, since the same image might be referenced
-     * by other parts of the epub file.
+     * by other parts of the EPUB file.
      */
     public function clearCover()
     {
@@ -496,17 +496,17 @@ class Epub
         }
 
         // remove any cover image file added by us
-        $this->zip->deleteName($this->opfDir . self::COVER_ID . '.img');
+        $this->zip->deleteName($this->packageDir . self::COVER_ID . '.img');
 
         // remove metadata cover pointer
-        $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
+        $nodes = $this->packageXPath->query('//opf:metadata/opf:meta[@name="cover"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
         }
 
         // remove previous manifest entries if they where made by us
-        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="' . self::COVER_ID . '"]');
+        $nodes = $this->packageXPath->query('//opf:manifest/opf:item[@id="' . self::COVER_ID . '"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
@@ -535,20 +535,20 @@ class Epub
 
         // add metadata cover pointer
         /** @var EpubDomElement $parent */
-        $parent = $this->opfXPath->query('//opf:metadata')->item(0);
+        $parent = $this->packageXPath->query('//opf:metadata')->item(0);
         $node = $parent->newChild('opf:meta');
         $node->setAttrib('opf:name', 'cover');
         $node->setAttrib('opf:content', self::COVER_ID);
 
         // add manifest item
-        $parent = $this->opfXPath->query('//opf:manifest')->item(0);
+        $parent = $this->packageXPath->query('//opf:manifest')->item(0);
         $node = $parent->newChild('opf:item');
         $node->setAttrib('id', self::COVER_ID);
         $node->setAttrib('opf:href', self::COVER_ID . '.img');
         $node->setAttrib('opf:media-type', $mime);
 
         // add the cover image
-        $this->zip->addFile($path, $this->opfDir . self::COVER_ID . '.img');
+        $this->zip->addFile($path, $this->packageDir . self::COVER_ID . '.img');
 
         $this->reparse();
     }
@@ -587,10 +587,10 @@ class Epub
         // add title page file to zip
         $template = file_get_contents($templatePath);
         $xhtml = strtr($template, ['{{ title }}' => $this->getTitle(), '{{ coverPath }}' => $this->getCoverPath(true)]);
-        $this->zip->addFromString($this->opfDir . $xhtmlFilename, $xhtml);
+        $this->zip->addFromString($this->packageDir . $xhtmlFilename, $xhtml);
 
         // prepend title page file to manifest
-        $parent = $this->opfXPath->query('//opf:manifest')->item(0);
+        $parent = $this->packageXPath->query('//opf:manifest')->item(0);
         $node = new EpubDomElement('opf:item');
         $parent->insertBefore($node, $parent->firstChild);
         $node->setAttrib('id', self::TITLE_PAGE_ID);
@@ -598,13 +598,13 @@ class Epub
         $node->setAttrib('opf:media-type', 'application/xhtml+xml');
 
         // prepend title page spine item
-        $parent = $this->opfXPath->query('//opf:spine')->item(0);
+        $parent = $this->packageXPath->query('//opf:spine')->item(0);
         $node = new EpubDomElement('opf:itemref');
         $parent->insertBefore($node, $parent->firstChild);
         $node->setAttrib('idref', self::TITLE_PAGE_ID);
 
         // prepend title page guide reference
-        $parent = $this->opfXPath->query('//opf:guide')->item(0);
+        $parent = $this->packageXPath->query('//opf:guide')->item(0);
         $node = new EpubDomElement('opf:reference');
         $parent->insertBefore($node, $parent->firstChild);
         $node->setAttrib('opf:href', $xhtmlFilename);
@@ -620,24 +620,24 @@ class Epub
         $xhtmlFilename = self::TITLE_PAGE_ID . '.xhtml';
 
         // remove title page file from zip
-        $this->zip->deleteName($this->opfDir . $xhtmlFilename);
+        $this->zip->deleteName($this->packageDir . $xhtmlFilename);
 
         // remove title page file from manifest
-        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="' . self::TITLE_PAGE_ID . '"]');
+        $nodes = $this->packageXPath->query('//opf:manifest/opf:item[@id="' . self::TITLE_PAGE_ID . '"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
         }
 
         // remove title page spine item
-        $nodes = $this->opfXPath->query('//opf:spine/opf:itemref[@idref="' . self::TITLE_PAGE_ID . '"]');
+        $nodes = $this->packageXPath->query('//opf:spine/opf:itemref[@idref="' . self::TITLE_PAGE_ID . '"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
         }
 
         // remove title page guide reference
-        $nodes = $this->opfXPath->query('//opf:guide/opf:reference[@href="' . $xhtmlFilename . '"]');
+        $nodes = $this->packageXPath->query('//opf:guide/opf:reference[@href="' . $xhtmlFilename . '"]');
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $node->delete();
@@ -654,9 +654,9 @@ class Epub
     {
         if (!$this->spine) {
             /** @var DOMElement $spineNode */
-            $spineNode = $this->opfXPath->query('//opf:spine')->item(0);
+            $spineNode = $this->packageXPath->query('//opf:spine')->item(0);
             if (is_null($spineNode)) {
-                throw new Exception('No spine element found in epub!');
+                throw new Exception('No spine element found in EPUB!');
             }
             $tocFile = $this->getTocFile($spineNode);
 
@@ -667,7 +667,7 @@ class Epub
                 /** @var DOMElement $itemRef */
                 $id = $itemRef->getAttribute('idref');
                 /** @var DOMElement $item */
-                $item = $this->opfXPath->query("//opf:manifest/opf:item[@id=\"$id\"]")->item(0);
+                $item = $this->packageXPath->query("//opf:manifest/opf:item[@id=\"$id\"]")->item(0);
                 if (is_null($item)) {
                     throw new Exception('Item referenced in spine missing in manifest!');
                 }
@@ -710,7 +710,7 @@ class Epub
     }
 
     /**
-     * Extract (a part of) the contents from an XML file contained in the epub.
+     * Extract (a part of) the contents from an XML file contained in the EPUB.
      *
      * @param string $file The XML file to load (path in zip archive)
      * @param string|null $fragmentBegin ID of the element where to start reading the contents.
@@ -819,7 +819,7 @@ class Epub
         $xpath = $this->buildMetaXPath($item, $attribute, $attributeValue, $caseSensitive);
 
         // set value
-        $nodes = $this->opfXPath->query($xpath);
+        $nodes = $this->packageXPath->query($xpath);
         if ($nodes->length == 1) {
             /** @var EpubDomElement $node */
             $node = $nodes->item(0);
@@ -839,7 +839,7 @@ class Epub
             }
             // re-add them
             if ($value) {
-                $parent = $this->opfXPath->query('//opf:metadata')->item(0);
+                $parent = $this->packageXPath->query('//opf:metadata')->item(0);
                 $node = new EpubDomElement($item, $value);
                 $node = $parent->appendChild($node);
                 if ($attribute) {
@@ -871,7 +871,7 @@ class Epub
         $xpath = $this->buildMetaXPath($item, $att, $aval, $caseSensitive);
 
         // get value
-        $nodes = $this->opfXPath->query($xpath);
+        $nodes = $this->packageXPath->query($xpath);
         if ($nodes->length) {
             /** @var EpubDomElement $node */
             $node = $nodes->item(0);
@@ -934,7 +934,7 @@ class Epub
             throw new Exception('No toc ID given in spine!');
         }
         /** @var DOMElement $tocItem */
-        $tocItem = $this->opfXPath->query("//opf:manifest/opf:item[@id=\"$tocId\"]")->item(0);
+        $tocItem = $this->packageXPath->query("//opf:manifest/opf:item[@id=\"$tocId\"]")->item(0);
         if (is_null($tocItem)) {
             throw new Exception('TOC item referenced by spine missing in manifest!');
         }
@@ -978,16 +978,16 @@ class Epub
      * Load an XML file from the EPUB/ZIP archive.
      *
      * @param $path string The xml file to load from the zip archive.
-     * @param bool $relativeToOpfDir If true, $path is considered relative to OPF directory, else to zip root
+     * @param bool $relativeToPackageDir If true, $path is considered relative to package directory, else to zip root
      * @param bool $isHtml If true, file contents is considered HTML.
      * @return DOMDocument
      * @throws Exception
      */
-    private function loadZipXml($path, $relativeToOpfDir = true, $isHtml = false)
+    private function loadZipXml($path, $relativeToPackageDir = true, $isHtml = false)
     {
-        $data = $this->zip->getFromName(($relativeToOpfDir ? $this->opfDir : '').$path);
+        $data = $this->zip->getFromName(($relativeToPackageDir ? $this->packageDir : '').$path);
         if (!$data) {
-            throw new Exception('Failed to access epub container data: '.$path);
+            throw new Exception('Failed to access EPUB container data: '.$path);
         }
         $xml = new DOMDocument();
         if ($isHtml) {
@@ -1007,7 +1007,7 @@ class Epub
      */
     private function getCoverId()
     {
-        $nodes = $this->opfXPath->query('//opf:metadata/opf:meta[@name="cover"]');
+        $nodes = $this->packageXPath->query('//opf:metadata/opf:meta[@name="cover"]');
         if (!$nodes->length) {
             return null;
         }
@@ -1020,24 +1020,24 @@ class Epub
     /**
      * Get the internal path of the cover image file.
      *
-     * @param bool $relativeToOpfDir Whether to return the path relative to the OPF directory.
+     * @param bool $relativeToPackageDir Whether to return the path relative to the package directory.
      * @return null|string
      */
-    private function getCoverPath($relativeToOpfDir = false)
+    private function getCoverPath($relativeToPackageDir = false)
     {
         $coverId = $this->getCoverId();
         if (!$coverId) {
             return null;
         }
 
-        $nodes = $this->opfXPath->query('//opf:manifest/opf:item[@id="' . $coverId . '"]');
+        $nodes = $this->packageXPath->query('//opf:manifest/opf:item[@id="' . $coverId . '"]');
         if (!$nodes->length) {
             return null;
         }
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
 
-        return ($relativeToOpfDir ? '' : $this->opfDir) . $node->getAttrib('opf:href');
+        return ($relativeToPackageDir ? '' : $this->packageDir) . $node->getAttrib('opf:href');
     }
 
     /**
@@ -1048,7 +1048,7 @@ class Epub
      */
     private function reparse()
     {
-        $this->opfDom->loadXML($this->opfDom->saveXML());
-        $this->opfXPath = new EpubDomXPath($this->opfDom);
+        $this->packageDom->loadXML($this->packageDom->saveXML());
+        $this->packageXPath = new EpubDomXPath($this->packageDom);
     }
 }

@@ -53,7 +53,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to read epub file. Not a zip archive.
+     * @expectedExceptionMessage Failed to read EPUB file. Not a zip archive.
      */
     public function testLoadNonZip()
     {
@@ -62,7 +62,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to read epub file. Zip archive inconsistent.
+     * @expectedExceptionMessage Failed to read EPUB file. Zip archive inconsistent.
      */
     public function testLoadBrokenZip()
     {
@@ -71,7 +71,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to read epub file. No such file.
+     * @expectedExceptionMessage Failed to read EPUB file. No such file.
      */
     public function testLoadMissingFile()
     {
@@ -80,7 +80,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to read epub file.
+     * @expectedExceptionMessage Failed to read EPUB file.
      * We cannot expect a more specific exception message. ZipArchive::open returns 28
      * which is not known as an error code.
      */
@@ -91,7 +91,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to access epub container data: META-INF/container.xml
+     * @expectedExceptionMessage Failed to access EPUB container data: META-INF/container.xml
      */
     public function testLoadEmptyZip()
     {
