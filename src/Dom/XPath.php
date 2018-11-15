@@ -10,7 +10,7 @@ use DOMXPath;
  *
  * Source: https://github.com/splitbrain/php-epub-meta
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
- * @author Simon Schrape <simon@epubli.com> © 2015
+ * @author Simon Schrape <simon@epubli.com> © 2015–2018
  */
 class XPath extends DOMXPath
 {
@@ -18,10 +18,8 @@ class XPath extends DOMXPath
     {
         parent::__construct($doc);
 
-        if ($doc->documentElement instanceof Element) {
-            foreach ($doc->documentElement->namespaces as $ns => $url) {
-                $this->registerNamespace($ns, $url);
-            }
+        foreach (XmlNamespace::toPrefixArray() as $prefix => $namespaceUri) {
+            $this->registerNamespace($prefix, $namespaceUri);
         }
     }
 }

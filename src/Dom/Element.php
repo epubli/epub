@@ -9,24 +9,18 @@ use DOMElement;
  *
  * Source: https://github.com/splitbrain/php-epub-meta
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
- * @author Simon Schrape <simon@epubli.com> © 2015
+ * @author Simon Schrape <simon@epubli.com> © 2015–2018
  *
  * @property string $nodeValueUnescaped
  */
 class Element extends DOMElement
 {
-    public $namespaces = [
-        'ocf' => 'urn:oasis:names:tc:opendocument:xmlns:container',
-        'opf' => 'http://www.idpf.org/2007/opf',
-        'dc' => 'http://purl.org/dc/elements/1.1/',
-    ];
-
     public function __construct($name, $value = '', $namespaceUri = '')
     {
         list($prefix, $name) = $this->splitQualifiedName($name);
         $value = htmlspecialchars($value);
         if (!$namespaceUri && $prefix) {
-            $namespaceUri = $this->namespaces[$prefix];
+            $namespaceUri = XmlNamespace::getUri($prefix);
         }
         parent::__construct($name, $value, $namespaceUri);
     }
@@ -151,7 +145,7 @@ class Element extends DOMElement
 
         $namespaceUri = '';
         if ($prefix) {
-            $namespaceUri = $this->namespaces[$prefix];
+            $namespaceUri = XmlNamespace::getUri($prefix);
             if (
                 !$this->namespaceURI && $this->isDefaultNamespace($namespaceUri)
                 || $this->namespaceURI == $namespaceUri
