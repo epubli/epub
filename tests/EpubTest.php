@@ -360,7 +360,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('application/xhtml+xml', (string)$titlePage->getMediaType());
 
         // We expect an empty string since there is only an image but no text on that page.
-        $this->assertEmpty(trim($this->epub->getContents($titlePage->getHref())));
+        $this->assertEmpty(trim($titlePage->getContents()));
     }
 
     public function testToc()
@@ -412,19 +412,16 @@ class EpubTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Exception
+     * @throws Exception
      */
-    public function testContentsNonExisting()
-    {
-        $this->epub->getContents('I-am-not-there.xml');
-    }
-
     public function testContents()
     {
-        $contents = trim($this->epub->getContents('main0.xml'));
+        $spine = $this->epub->getSpine();
+        $contents = trim($spine[3]->getContents());
         $this->assertStringStartsWith('Act I', $contents);
         $this->assertStringEndsWith('our toil shall strive to mend.', $contents);
-        $contents = trim($this->epub->getContents('main1.xml'));
+
+        $contents = trim($spine[4]->getContents());
         $this->assertStringStartsWith('SCENE I. Verona. A public place.', $contents);
         $this->assertStringEndsWith(
             'I\'ll pay that doctrine, or else die in debt.' . PHP_EOL . PHP_EOL . 'Exeunt',
@@ -432,21 +429,30 @@ class EpubTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @throws Exception
+     */
     public function testContentsFragment1()
     {
-        $contents = trim($this->epub->getContents('main13.xml', 'section_77331', 'section_77332'));
+        $spine = $this->epub->getSpine();
+        $contents = trim($spine[16]->getContents('section_77331', 'section_77332'));
         $this->assertEquals('Act III', $contents);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testContentsFragment2()
     {
-        $contents = trim($this->epub->getContents('main13.xml', null, 'section_77332'));
+        $spine = $this->epub->getSpine();
+        $contents = trim($spine[16]->getContents(null, 'section_77332'));
         $this->assertEquals('Act III', $contents);
     }
 
     public function testContentsFragment3()
     {
-        $contents = trim($this->epub->getContents('main13.xml', 'section_77332'));
+        $spine = $this->epub->getSpine();
+        $contents = trim($spine[16]->getContents('section_77332'));
         $this->assertStringStartsWith('SCENE I. A public place.', $contents);
         $this->assertStringEndsWith(
             'Mercy but murders, pardoning those that kill.' . PHP_EOL . PHP_EOL . 'Exeunt',
@@ -460,7 +466,8 @@ class EpubTest extends PHPUnit_Framework_TestCase
      */
     public function testContentsStartFragmentException()
     {
-        $this->epub->getContents('main0.xml', 'NonExistingElement');
+        $spine = $this->epub->getSpine();
+        $spine[3]->getContents('NonExistingElement');
     }
 
     /**
@@ -469,20 +476,22 @@ class EpubTest extends PHPUnit_Framework_TestCase
      */
     public function testContentsEndFragmentException()
     {
-        $this->epub->getContents('main0.xml', null, 'NonExistingElement');
+        $spine = $this->epub->getSpine();
+        $spine[3]->getContents(null, 'NonExistingElement');
     }
 
     /**
      * @dataProvider provideMarkupTestParameters
      * @param string $referenceFile
-     * @param string $internalFile
+     * @param string $spineIndex
      * @param string $fragmentBegin
      * @param string $fragmentEnd
      * @throws Exception
      */
-    public function testContentsMarkup($referenceFile, $internalFile, $fragmentBegin = null, $fragmentEnd = null)
+    public function testContentsMarkup($referenceFile, $spineIndex, $fragmentBegin = null, $fragmentEnd = null)
     {
-        $contents = $this->epub->getContents($internalFile, $fragmentBegin, $fragmentEnd, true);
+        $spine = $this->epub->getSpine();
+        $contents = $spine[$spineIndex]->getContents($fragmentBegin, $fragmentEnd, true);
         $extracted = new DOMDocument();
         $extracted->loadXML($contents);
         $reference = new DOMDocument();
@@ -493,11 +502,11 @@ class EpubTest extends PHPUnit_Framework_TestCase
     public function provideMarkupTestParameters()
     {
         return [
-            [self::MARKUP_XML_1, 'main0.xml'],
-            [self::MARKUP_XML_2, 'main1.xml'],
-            [self::MARKUP_XML_3, 'main13.xml', 'section_77331', 'section_77332'],
-            [self::MARKUP_XML_4, 'main13.xml', null, 'section_77332'],
-            [self::MARKUP_XML_5, 'main13.xml', 'section_77332'],
+            [self::MARKUP_XML_1, 3],
+            [self::MARKUP_XML_2, 4],
+            [self::MARKUP_XML_3, 16, 'section_77331', 'section_77332'],
+            [self::MARKUP_XML_4, 16, null, 'section_77332'],
+            [self::MARKUP_XML_5, 16, 'section_77332'],
         ];
     }
 }

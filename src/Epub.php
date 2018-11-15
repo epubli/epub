@@ -5,7 +5,6 @@ namespace Epubli\Epub;
 use DOMDocument;
 use DOMElement;
 use DOMNodeList;
-use DOMText;
 use DOMXPath;
 use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
@@ -667,8 +666,9 @@ class Epub
                     throw new Exception('Item referenced in spine missing in manifest!');
                 }
                 $href = urldecode($item->getAttribute('href'));
+                $handle = $this->zip->getStream($this->packageDir . $href);
                 $mediaType = new InternetMediaType($item->getAttribute('media-type'));
-                $this->spine->addItem(new SpineItem($id, $href, $mediaType));
+                $this->spine->addItem(new SpineItem($id, $href, $handle, $mediaType));
             }
         }
 
@@ -697,100 +697,6 @@ class Epub
         }
 
         return $this->toc;
-    }
-
-    /**
-     * Extract (a part of) the contents from an XML file contained in the EPUB.
-     *
-     * @param string $file The XML file to load (path in zip archive)
-     * @param string|null $fragmentBegin ID of the element where to start reading the contents.
-     * @param string|null $fragmentEnd ID of the element where to stop reading the contents.
-     * @param bool $keepMarkup Whether to keep the XHTML markup rather than extracted plain text.
-     * @return string The contents of that fragment.
-     * @throws Exception
-     */
-    public function getContents($file, $fragmentBegin = null, $fragmentEnd = null, $keepMarkup = false)
-    {
-        $dom = $this->loadZipXml($file, true, true);
-        // get the starting point
-        if ($fragmentBegin) {
-            $xp = new DOMXPath($dom);
-            $node = $xp->query("//*[@id='$fragmentBegin']")->item(0);
-            if (!$node) {
-                throw new Exception("Begin of fragment not found: No element with ID $fragmentBegin in $file!");
-            }
-        } else {
-            $node = $dom->getElementsByTagName('body')->item(0) ?: $dom->documentElement;
-        }
-
-        $allowableTags = [
-            'br',
-            'p',
-            'h1',
-            'h2',
-            'h3',
-            'h4',
-            'h5',
-            'span',
-            'div',
-            'i',
-            'strong',
-            'b',
-            'table',
-            'td',
-            'th',
-            'tr',
-        ];
-        $contents = '';
-        $endTags = [];
-        // traverse DOM structure till end point is reached, accumulating the contents
-        while ($node && (!$fragmentEnd || !$node->hasAttributes() || $node->getAttribute('id') != $fragmentEnd)) {
-            if ($node instanceof DOMText) {
-                // when encountering a text node append its value to the contents
-                $contents .= $keepMarkup ? htmlspecialchars($node->nodeValue) : $node->nodeValue;
-            } elseif ($node instanceof DOMElement) {
-                $tag = $node->localName;
-                if ($keepMarkup && in_array($tag, $allowableTags)) {
-                    $contents .= "<$tag>";
-                    $endTags[] = "</$tag>";
-                } elseif (HtmlTools::isBlockLevelElement($tag)) {
-                    // add whitespace between contents of adjacent blocks
-                    $endTags[] = PHP_EOL;
-                } else {
-                    $endTags[] = '';
-                }
-
-                if ($node->hasChildNodes()) {
-                    // step into
-                    $node = $node->firstChild;
-                    continue;
-                }
-            }
-
-            // leave node
-            while ($node) {
-                if ($node instanceof DOMElement) {
-                    $contents .= array_pop($endTags);
-                }
-
-                if ($node->nextSibling) {
-                    // step right
-                    $node = $node->nextSibling;
-                    break;
-                } elseif ($node = $node->parentNode) {
-                    // step out
-                    continue;
-                } elseif ($fragmentEnd) {
-                    // reached end of DOM without finding fragment end
-                    throw new Exception("End of fragment not found: No element with ID $fragmentEnd in $file!");
-                }
-            }
-        }
-        while ($endTags) {
-            $contents .= array_pop($endTags);
-        }
-
-        return $contents;
     }
 
     /**

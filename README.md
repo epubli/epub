@@ -12,8 +12,7 @@ Additional functionality includes reading the TOC/spine structure of EPUBs and e
 
 In your [composer](https://getcomposer.org/).json include the following:
 
-```
-#!json
+```json
 {
     "repositories": [
         {
@@ -28,8 +27,7 @@ In your [composer](https://getcomposer.org/).json include the following:
 ```
 Then do:
 
-```
-#!shell
+```shell
 
 $ composer install
 ```
@@ -38,8 +36,7 @@ $ composer install
 ### Usage ###
 
 
-```
-#!php
+```php
 <?php
 
 // Open an EPUB file
@@ -55,13 +52,11 @@ $spine = $epub->getSpine();
 
 // Iterate over the EPUB structure
 foreach ($spine as $spineItem) {
-    $href = $spineItem->getHref();
-
     // Get some text from the EPUB
-    $chapterText = $epub->getContents($href);
+    $chapterText = $spineItem->getContents();
 
     // Or find all navigation points pointing to that spine item
-    $navPoints = $toc->findNavPointsForFile($href);
+    $navPoints = $toc->findNavPointsForFile($spineItem->getHref());
 
     // Do something useful with the NavPoints.
 }
