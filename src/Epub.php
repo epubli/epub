@@ -40,12 +40,8 @@ class Epub
     private $packageFile;
     /** @var string The (archive local) directory containing the package (.opf) file */
     private $packageDir;
-    /** @var DOMDocument The DOM of the package (.opf) file */
-    private $packageDom;
     /** @var EpubDomXPath The XPath object for the root (.opf) file */
     private $packageXPath;
-    /** @var DOMDocument The DOM of the TOC (.ncx) file */
-    private $tocDom;
     /** @var Spine The spine structure of this EPUB */
     private $spine;
     /** @var Toc The TOC structure of this EPUB */
@@ -107,8 +103,7 @@ class Epub
         }
 
         // load metadata
-        $this->packageDom = $this->loadZipXml($this->packageFile);
-        $this->packageXPath = new EpubDomXPath($this->packageDom);
+        $this->packageXPath = new EpubDomXPath($this->loadZipXml($this->packageFile));
     }
 
     public function __destruct()
@@ -129,7 +124,7 @@ class Epub
      */
     public function save()
     {
-        $this->zip->addFromString($this->packageDir.$this->packageFile, $this->packageDom->saveXML());
+        $this->zip->addFromString($this->packageDir.$this->packageFile, $this->packageXPath->document->saveXML());
         // close and reopen zip archive
         $this->zip->close();
         $this->zip->open($this->filename);
@@ -349,7 +344,7 @@ class Epub
      */
     public function setUniqueIdentifier($value)
     {
-        $idRef = $this->packageDom->documentElement->getAttribute('unique-identifier');
+        $idRef = $this->packageXPath->document->documentElement->getAttribute('unique-identifier');
         $this->setMeta('dc:identifier', $value, 'id', $idRef);
     }
 
@@ -361,7 +356,7 @@ class Epub
      */
     public function getUniqueIdentifier($normalize = false)
     {
-        $idRef = $this->packageDom->documentElement->getAttribute('unique-identifier');
+        $idRef = $this->packageXPath->document->documentElement->getAttribute('unique-identifier');
         $idVal = $this->getMeta('dc:identifier', 'id', $idRef);
         if ($normalize) {
             $idVal = strtolower($idVal);
@@ -689,11 +684,7 @@ class Epub
     public function getToc()
     {
         if (!$this->toc) {
-            if (!$this->tocDom) {
-                $tocFile = $this->getSpine()->getTocSource();
-                $this->tocDom = $this->loadZipXml($tocFile);
-            }
-            $xp = new DOMXPath($this->tocDom);
+            $xp = new DOMXPath($this->loadZipXml($this->getSpine()->getTocSource()));
             $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
             $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
             $title = $titleNode ? $titleNode->nodeValue : '';
@@ -1048,7 +1039,8 @@ class Epub
      */
     private function reparse()
     {
-        $this->packageDom->loadXML($this->packageDom->saveXML());
-        $this->packageXPath = new EpubDomXPath($this->packageDom);
+        $dom = $this->packageXPath->document;
+        $dom->loadXML($dom->saveXML());
+        $this->packageXPath = new EpubDomXPath($dom);
     }
 }
