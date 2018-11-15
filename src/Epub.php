@@ -112,7 +112,7 @@ class Epub
     }
 
     /**
-     * file name getter
+     * Get the file path of the EPUB file.
      */
     public function getFilename()
     {
