@@ -176,7 +176,7 @@ class Epub
             $node->setAttrib('opf:file-as', $as);
         }
 
-        $this->reparse();
+        $this->sync();
     }
 
     /**
@@ -458,7 +458,7 @@ class Epub
             $parent->appendChild($node);
         }
 
-        $this->reparse();
+        $this->sync();
     }
 
     /**
@@ -507,7 +507,7 @@ class Epub
             $node->delete();
         }
 
-        $this->reparse();
+        $this->sync();
     }
 
     /**
@@ -545,7 +545,7 @@ class Epub
         // add the cover image
         $this->zip->addFile($path, $this->packageDir . self::COVER_ID . '.img');
 
-        $this->reparse();
+        $this->sync();
     }
 
     /**
@@ -842,7 +842,7 @@ class Epub
             }
         }
 
-        $this->reparse();
+        $this->sync();
     }
 
     /**
@@ -1031,12 +1031,9 @@ class Epub
     }
 
     /**
-     * Reparse the DOM tree
-     *
-     * I had to rely on this because otherwise xpath failed to find the newly
-     * added nodes
+     * Sync XPath object with updated DOM.
      */
-    private function reparse()
+    private function sync()
     {
         $dom = $this->packageXPath->document;
         $dom->loadXML($dom->saveXML());
