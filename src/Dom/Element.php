@@ -18,17 +18,17 @@ class Element extends DOMElement
     public $namespaces = [
         'ocf' => 'urn:oasis:names:tc:opendocument:xmlns:container',
         'opf' => 'http://www.idpf.org/2007/opf',
-        'dc' => 'http://purl.org/dc/elements/1.1/'
+        'dc' => 'http://purl.org/dc/elements/1.1/',
     ];
 
-    public function __construct($name, $value = '', $namespaceURI = '')
+    public function __construct($name, $value = '', $namespaceUri = '')
     {
-        list($ns, $name) = $this->splitNamespacedName($name);
+        list($prefix, $name) = $this->splitQualifiedName($name);
         $value = htmlspecialchars($value);
-        if (!$namespaceURI && $ns) {
-            $namespaceURI = $this->namespaces[$ns];
+        if (!$namespaceUri && $prefix) {
+            $namespaceUri = $this->namespaces[$prefix];
         }
-        parent::__construct($name, $value, $namespaceURI);
+        parent::__construct($name, $value, $namespaceUri);
     }
 
     public function __get($name)
@@ -37,6 +37,7 @@ class Element extends DOMElement
             case 'nodeValueUnescaped':
                 return htmlspecialchars_decode($this->nodeValue);
         }
+
         return null;
     }
 
@@ -60,29 +61,77 @@ class Element extends DOMElement
      */
     public function newChild($name, $value = '')
     {
-        list($ns, $local) = $this->splitNamespacedName($name);
-        $nsuri = '';
-        if ($ns) {
-            $nsuri = $this->namespaces[$ns];
-            if ($this->isDefaultNamespace($nsuri)) {
-                $name = $local;
-                $nsuri = '';
-            }
-        }
+        list($localName, $namespaceUri) = $this->getNameContext($name);
 
         // this doesn't call the constructor: $node = $this->ownerDocument->createElement($name,$value);
-        $node = new Element($name, $value, $nsuri);
+        $node = new Element($namespaceUri ? $name : $localName, $value, $namespaceUri);
 
         return $this->appendChild($node);
+    }
+
+    /**
+     * Simple EPUB namespace aware attribute getter
+     * @param string $name
+     * @return string
+     */
+    public function getAttrib($name)
+    {
+        list($localName, $namespaceUri) = $this->getNameContext($name);
+
+        // return value if none was given
+        if ($namespaceUri) {
+            return $this->getAttributeNS($namespaceUri, $localName);
+        } else {
+            return $this->getAttribute($localName);
+        }
+    }
+
+    /**
+     * Simple EPUB namespace aware attribute setter
+     * @param string $name
+     * @param mixed $value
+     */
+    public function setAttrib($name, $value)
+    {
+        list($localName, $namespaceUri) = $this->getNameContext($name);
+
+        if ($namespaceUri) {
+            $this->setAttributeNS($namespaceUri, $localName, $value);
+        } else {
+            $this->setAttribute($localName, $value);
+        }
+    }
+
+    /**
+     * Simple EPUB namespace aware attribute remover
+     * @param string $name
+     */
+    public function removeAttrib($name)
+    {
+        list($localName, $namespaceUri) = $this->getNameContext($name);
+
+        if ($namespaceUri) {
+            $this->removeAttributeNS($namespaceUri, $localName);
+        } else {
+            $this->removeAttribute($localName);
+        }
+    }
+
+    /**
+     * Remove this node from the DOM
+     */
+    public function delete()
+    {
+        $this->parentNode->removeChild($this);
     }
 
     /**
      * Split given name in namespace prefix and local part
      *
      * @param  string $name
-     * @return array  (namespace, name)
+     * @return array  (prefix, name)
      */
-    private function splitNamespacedName($name)
+    private function splitQualifiedName($name)
     {
         $list = explode(':', $name, 2);
         if (count($list) < 2) {
@@ -93,58 +142,24 @@ class Element extends DOMElement
     }
 
     /**
-     * Simple EPUB namespace aware attribute accessor
-     * @param $attr
-     * @param null $value
-     * @return string
+     * @param $name
+     * @return array
      */
-    public function attr($attr, $value = null)
+    private function getNameContext($name)
     {
-        list($ns, $attr) = $this->splitNamespacedName($attr);
+        list($prefix, $localName) = $this->splitQualifiedName($name);
 
-        $nsuri = '';
-        if ($ns) {
-            $nsuri = $this->namespaces[$ns];
-            if (!$this->namespaceURI) {
-                if ($this->isDefaultNamespace($nsuri)) {
-                    $nsuri = '';
-                }
-            } elseif ($this->namespaceURI == $nsuri) {
-                $nsuri = '';
+        $namespaceUri = '';
+        if ($prefix) {
+            $namespaceUri = $this->namespaces[$prefix];
+            if (
+                !$this->namespaceURI && $this->isDefaultNamespace($namespaceUri)
+                || $this->namespaceURI == $namespaceUri
+            ) {
+                $namespaceUri = '';
             }
         }
 
-        if (!is_null($value)) {
-            if ($value === false) {
-                // delete if false was given
-                if ($nsuri) {
-                    $this->removeAttributeNS($nsuri, $attr);
-                } else {
-                    $this->removeAttribute($attr);
-                }
-            } else {
-                // modify if value was given
-                if ($nsuri) {
-                    $this->setAttributeNS($nsuri, $attr, $value);
-                } else {
-                    $this->setAttribute($attr, $value);
-                }
-            }
-        }
-
-        // return value if none was given
-        if ($nsuri) {
-            return $this->getAttributeNS($nsuri, $attr);
-        } else {
-            return $this->getAttribute($attr);
-        }
-    }
-
-    /**
-     * Remove this node from the DOM
-     */
-    public function delete()
-    {
-        $this->parentNode->removeChild($this);
+        return [$localName, $namespaceUri];
     }
 }

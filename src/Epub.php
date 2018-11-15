@@ -100,7 +100,7 @@ class Epub
         $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
-        $rootFile = $node->attr('full-path');
+        $rootFile = $node->getAttrib('full-path');
         $this->opfFilename = basename($rootFile);
         if ($rootFile != $this->opfFilename) {
             $this->opfDir = dirname($rootFile).DIRECTORY_SEPARATOR;
@@ -177,8 +177,8 @@ class Epub
                 $as = $name;
             } //numeric array given
             $node = $parent->newChild('dc:creator', $name);
-            $node->attr('opf:role', 'aut');
-            $node->attr('opf:file-as', $as);
+            $node->setAttrib('opf:role', 'aut');
+            $node->setAttrib('opf:file-as', $as);
         }
 
         $this->reparse();
@@ -202,13 +202,13 @@ class Epub
         foreach ($nodes as $node) {
             /** @var EpubDomElement $node */
             $name = $node->nodeValueUnescaped;
-            $as = $node->attr('opf:file-as');
+            $as = $node->getAttrib('opf:file-as');
             if (!$as) {
                 $as = $name;
-                $node->attr('opf:file-as', $as);
+                $node->setAttrib('opf:file-as', $as);
             }
             if ($rolefix) {
-                $node->attr('opf:role', 'aut');
+                $node->setAttrib('opf:role', 'aut');
             }
             $authors[$as] = $name;
         }
@@ -537,15 +537,15 @@ class Epub
         /** @var EpubDomElement $parent */
         $parent = $this->opfXPath->query('//opf:metadata')->item(0);
         $node = $parent->newChild('opf:meta');
-        $node->attr('opf:name', 'cover');
-        $node->attr('opf:content', self::COVER_ID);
+        $node->setAttrib('opf:name', 'cover');
+        $node->setAttrib('opf:content', self::COVER_ID);
 
         // add manifest item
         $parent = $this->opfXPath->query('//opf:manifest')->item(0);
         $node = $parent->newChild('opf:item');
-        $node->attr('id', self::COVER_ID);
-        $node->attr('opf:href', self::COVER_ID . '.img');
-        $node->attr('opf:media-type', $mime);
+        $node->setAttrib('id', self::COVER_ID);
+        $node->setAttrib('opf:href', self::COVER_ID . '.img');
+        $node->setAttrib('opf:media-type', $mime);
 
         // add the cover image
         $this->zip->addFile($path, $this->opfDir . self::COVER_ID . '.img');
@@ -593,23 +593,23 @@ class Epub
         $parent = $this->opfXPath->query('//opf:manifest')->item(0);
         $node = new EpubDomElement('opf:item');
         $parent->insertBefore($node, $parent->firstChild);
-        $node->attr('id', self::TITLE_PAGE_ID);
-        $node->attr('opf:href', $xhtmlFilename);
-        $node->attr('opf:media-type', 'application/xhtml+xml');
+        $node->setAttrib('id', self::TITLE_PAGE_ID);
+        $node->setAttrib('opf:href', $xhtmlFilename);
+        $node->setAttrib('opf:media-type', 'application/xhtml+xml');
 
         // prepend title page spine item
         $parent = $this->opfXPath->query('//opf:spine')->item(0);
         $node = new EpubDomElement('opf:itemref');
         $parent->insertBefore($node, $parent->firstChild);
-        $node->attr('idref', self::TITLE_PAGE_ID);
+        $node->setAttrib('idref', self::TITLE_PAGE_ID);
 
         // prepend title page guide reference
         $parent = $this->opfXPath->query('//opf:guide')->item(0);
         $node = new EpubDomElement('opf:reference');
         $parent->insertBefore($node, $parent->firstChild);
-        $node->attr('opf:href', $xhtmlFilename);
-        $node->attr('opf:type', 'cover');
-        $node->attr('opf:title', 'Title Page');
+        $node->setAttrib('opf:href', $xhtmlFilename);
+        $node->setAttrib('opf:type', 'cover');
+        $node->setAttrib('opf:title', 'Title Page');
     }
 
     /**
@@ -847,7 +847,7 @@ class Epub
                         // use first given value for new attribute
                         $attributeValue = reset($attributeValue);
                     }
-                    $node->attr($attribute, $attributeValue);
+                    $node->setAttrib($attribute, $attributeValue);
                 }
             }
         }
@@ -1014,7 +1014,7 @@ class Epub
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
 
-        return (String)$node->attr('opf:content');
+        return (String)$node->getAttrib('opf:content');
     }
 
     /**
@@ -1037,7 +1037,7 @@ class Epub
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
 
-        return ($relativeToOpfDir ? '' : $this->opfDir) . $node->attr('opf:href');
+        return ($relativeToOpfDir ? '' : $this->opfDir) . $node->getAttrib('opf:href');
     }
 
     /**
