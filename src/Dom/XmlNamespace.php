@@ -26,6 +26,9 @@ class XmlNamespace extends Enum
     /** @var string Dublin Core Metadata Element Set XML namespace */
     const DC = 'http://purl.org/dc/elements/1.1/';
 
+    /** @var string “Navigation Control file for XML” XML namespace */
+    const NCX = 'http://www.daisy.org/z3986/2005/ncx/';
+
     /**
      * Directly get the URI for a given namespace prefix.
      *

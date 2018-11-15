@@ -684,8 +684,7 @@ class Epub
     public function getToc()
     {
         if (!$this->toc) {
-            $xp = new DOMXPath($this->loadZipXml($this->getSpine()->getTocSource()));
-            $xp->registerNamespace('ncx', 'http://www.daisy.org/z3986/2005/ncx/');
+            $xp = new EpubDomXPath($this->loadZipXml($this->getSpine()->getTocSource()));
             $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
             $title = $titleNode ? $titleNode->nodeValue : '';
             $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
