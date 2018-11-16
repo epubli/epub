@@ -11,6 +11,7 @@ use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
 use Epubli\Epub\Manifest\Item as SpineItem;
+use Epubli\Epub\Manifest\Manifest;
 use Epubli\Epub\Spine\Spine;
 use Epubli\Epub\Toc\NavPoint as TocNavPoint;
 use Epubli\Epub\Toc\NavPointList as TocNavPointList;
@@ -41,6 +42,8 @@ class Epub
     private $packageDir;
     /** @var EpubDomXPath The XPath object for the root (.opf) file */
     private $packageXPath;
+    /** @var Manifest The manifest (catalog of files) of this EPUB */
+    private $manifest;
     /** @var Spine The spine structure of this EPUB */
     private $spine;
     /** @var Toc The TOC structure of this EPUB */
@@ -636,6 +639,35 @@ class Epub
             /** @var EpubDomElement $node */
             $node->delete();
         }
+    }
+
+    /**
+     * Get the manifest of this EPUB.
+     *
+     * @return Manifest
+     * @throws Exception
+     */
+    public function getManifest()
+    {
+        if (!$this->manifest) {
+            /** @var DOMElement $manifestNode */
+            $manifestNode = $this->packageXPath->query('//opf:manifest')->item(0);
+            if (is_null($manifestNode)) {
+                throw new Exception('No manifest element found in EPUB!');
+            }
+
+            $this->manifest = new Manifest();
+            /** @var DOMElement $item */
+            foreach ($manifestNode->getElementsByTagName('item') as $item) {
+                $id = $item->getAttribute('id');
+                $href = urldecode($item->getAttribute('href'));
+                $handle = $this->zip->getStream($this->packageDir . $href);
+                $mediaType = new InternetMediaType($item->getAttribute('media-type'));
+                $this->manifest->add($id, $href, $handle, $mediaType);
+            }
+        }
+
+        return $this->manifest;
     }
 
     /**
