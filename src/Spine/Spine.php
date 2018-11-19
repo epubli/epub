@@ -21,6 +21,18 @@ class Spine implements Iterator, Countable, ArrayAccess
     private $items = [];
 
     /**
+     * Spine Constructor.
+     *
+     * @param Item $tocItem The TOC Item of this Spine.
+     */
+    public function __construct(Item $tocItem)
+    {
+        $this->tocItem = $tocItem;
+    }
+
+    /**
+     * Get the TOC Item of this Spine.
+     *
      * @return Item
      */
     public function getTocItem()
@@ -29,14 +41,11 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * @param Item $tocItem
+     * Append an Item to this Spine.
+     *
+     * @param Item $item The Item to append to this Spine.
      */
-    public function setTocItem(Item $tocItem)
-    {
-        $this->tocItem = $tocItem;
-    }
-
-    public function addItem(Item $item)
+    public function appendItem(Item $item)
     {
         $this->items[] = $item;
     }

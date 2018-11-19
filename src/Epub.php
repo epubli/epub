@@ -684,7 +684,6 @@ class Epub
                 throw new Exception('No spine element found in EPUB!');
             }
 
-            $this->spine = new Spine();
             $manifest = $this->getManifest();
 
             // Get the TOC item.
@@ -696,7 +695,7 @@ class Epub
                 throw new Exception('TOC item referenced in spine missing in manifest!');
             }
 
-            $this->spine->setTocItem($manifest[$tocId]);
+            $this->spine = new Spine($manifest[$tocId]);
 
             $itemRefNodes = $spineNode->getElementsByTagName('itemref');
             foreach ($itemRefNodes as $itemRef) {
@@ -706,7 +705,7 @@ class Epub
                     throw new Exception("Item $id referenced in spine missing in manifest!");
                 }
                 // Link the item from the manifest to the spine.
-                $this->spine->addItem($manifest[$id]);
+                $this->spine->appendItem($manifest[$id]);
             }
         }
 
