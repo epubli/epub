@@ -29,10 +29,10 @@ class Item
     private $data;
 
     /**
-     * @param string $id
+     * @param string $id This Item’s identifier.
      * @param string $href The path to the corresponding file.
      * @param resource $dataHandle A handle to the referenced file.
-     * @param InternetMediaType|null $mediaType
+     * @param InternetMediaType|null $mediaType The media type of the corresponding file. If omitted XHTML is assumed.
      */
     public function __construct($id, $href, $dataHandle, InternetMediaType $mediaType = null)
     {

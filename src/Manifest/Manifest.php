@@ -16,7 +16,7 @@ use Iterator;
  */
 class Manifest implements Iterator, Countable, ArrayAccess
 {
-    /** @var array|Item[] */
+    /** @var array|Item[] The map of all Items in this Manifest indexed by their IDs. */
     private $items = [];
 
     /**
@@ -41,8 +41,8 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Return the current element
+     * Return the current Item while iterating this Manifest.
+     *
      * @link http://php.net/manual/en/iterator.current.php
      * @return Item
      */
@@ -52,8 +52,7 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Move forward to next element
+     * Move forward to next Item while iterating this Manifest.
      * @link http://php.net/manual/en/iterator.next.php
      * @return void Any returned value is ignored.
      */
@@ -63,10 +62,10 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Return the key of the current element
+     * Return the ID of the current Item while iterating this Manifest.
+     *
      * @link http://php.net/manual/en/iterator.key.php
-     * @return mixed scalar on success, or null on failure.
+     * @return string on success, or null on failure.
      */
     public function key()
     {
@@ -74,11 +73,10 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Checks if current position is valid
+     * Checks if current Iterator position is valid.
+     *
      * @link http://php.net/manual/en/iterator.valid.php
-     * @return boolean The return value will be casted to boolean and then evaluated.
-     * Returns true on success or false on failure.
+     * @return boolean true on success or false on failure.
      */
     public function valid()
     {
@@ -86,8 +84,8 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Rewind the Iterator to the first element
+     * Rewind the Iterator to the first element.
+     *
      * @link http://php.net/manual/en/iterator.rewind.php
      * @return void Any returned value is ignored.
      */
@@ -97,6 +95,8 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
+     * Get the first Item of this Manifest.
+     *
      * @return Item
      */
     public function first()
@@ -105,6 +105,8 @@ class Manifest implements Iterator, Countable, ArrayAccess
     }
 
     /**
+     * Get the last Item of this Manifest.
+     *
      * @return Item
      */
     public function last()

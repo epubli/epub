@@ -17,7 +17,7 @@ class Spine implements Iterator, Countable, ArrayAccess
 {
     /** @var string */
     private $tocItem;
-    /** @var array|Item[] */
+    /** @var array|Item[] The ordered list of all Items in this Spine. */
     private $items = [];
 
     /**
@@ -51,8 +51,8 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Return the current element
+     * Return the current Item while iterating this Spine.
+     *
      * @link http://php.net/manual/en/iterator.current.php
      * @return Item
      */
@@ -62,8 +62,7 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Move forward to next element
+     * Move forward to next Item while iterating this Spine.
      * @link http://php.net/manual/en/iterator.next.php
      * @return void Any returned value is ignored.
      */
@@ -73,10 +72,10 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Return the key of the current element
+     * Return the index of the current Item while iterating this Spine.
+     *
      * @link http://php.net/manual/en/iterator.key.php
-     * @return mixed scalar on success, or null on failure.
+     * @return int on success, or null on failure.
      */
     public function key()
     {
@@ -84,11 +83,10 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Checks if current position is valid
+     * Checks if current Iterator position is valid.
+     *
      * @link http://php.net/manual/en/iterator.valid.php
-     * @return boolean The return value will be casted to boolean and then evaluated.
-     * Returns true on success or false on failure.
+     * @return boolean true on success or false on failure.
      */
     public function valid()
     {
@@ -96,8 +94,8 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Rewind the Iterator to the first element
+     * Rewind the Iterator to the first element.
+     *
      * @link http://php.net/manual/en/iterator.rewind.php
      * @return void Any returned value is ignored.
      */
@@ -107,6 +105,8 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
+     * Get the first Item of this Spine.
+     *
      * @return Item
      */
     public function first()
@@ -115,6 +115,8 @@ class Spine implements Iterator, Countable, ArrayAccess
     }
 
     /**
+     * Get the last Item of this Spine.
+     *
      * @return Item
      */
     public function last()
