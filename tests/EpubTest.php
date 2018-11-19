@@ -394,13 +394,13 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('SCENE V. A hall in Capulet\'s house.', $navPoint->getChildren()->last()->getNavLabel());
     }
 
+    /**
+     * @throws Exception
+     */
     public function testSpine()
     {
         $spine = $this->epub->getSpine();
         $this->assertCount(31, $spine);
-        $this->assertEquals(31, $spine->count());
-        $items = $spine->getItems();
-        $this->assertCount(31, $items);
 
         $this->assertEquals('cover', $spine->first()->getId());
         $this->assertEquals(InternetMediaType::XHTML(), $spine->current()->getMediaType());
@@ -409,6 +409,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('feedbooks', $spine->last()->getId());
 
         $this->assertEquals('fb.ncx', $spine->getTocItem()->getHref());
+
+        $this->assertSame($spine[0], $spine->first());
+        $this->assertSame($spine[30], $spine->last());
     }
 
     /**
