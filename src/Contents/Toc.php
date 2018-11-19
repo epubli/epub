@@ -1,6 +1,6 @@
 <?php
 
-namespace Epubli\Epub\Toc;
+namespace Epubli\Epub\Contents;
 
 /**
  * EPUB TOC structure

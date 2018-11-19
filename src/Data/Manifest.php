@@ -1,6 +1,6 @@
 <?php
 
-namespace Epubli\Epub\Manifest;
+namespace Epubli\Epub\Data;
 
 use ArrayAccess;
 use Countable;

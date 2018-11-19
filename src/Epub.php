@@ -10,11 +10,11 @@ use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
-use Epubli\Epub\Manifest\Manifest;
-use Epubli\Epub\Spine\Spine;
-use Epubli\Epub\Toc\NavPoint as TocNavPoint;
-use Epubli\Epub\Toc\NavPointList as TocNavPointList;
-use Epubli\Epub\Toc\Toc;
+use Epubli\Epub\Data\Manifest;
+use Epubli\Epub\Contents\Spine;
+use Epubli\Epub\Contents\NavPoint as TocNavPoint;
+use Epubli\Epub\Contents\NavPointList as TocNavPointList;
+use Epubli\Epub\Contents\Toc;
 use Epubli\Exception\Exception;
 use ZipArchive;
 

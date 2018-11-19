@@ -1,10 +1,10 @@
 <?php
 
-namespace Epubli\Epub\Spine;
+namespace Epubli\Epub\Contents;
 
 use ArrayAccess;
 use Countable;
-use Epubli\Epub\Manifest\Item;
+use Epubli\Epub\Data\Item;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
 

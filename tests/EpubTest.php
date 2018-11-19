@@ -4,7 +4,7 @@ namespace Epubli\Epub;
 
 use DOMDocument;
 use Epubli\Common\Enum\InternetMediaType;
-use Epubli\Epub\Toc\NavPoint;
+use Epubli\Epub\Contents\NavPoint;
 use Epubli\Exception\Exception;
 use PHPUnit_Framework_TestCase;
 
