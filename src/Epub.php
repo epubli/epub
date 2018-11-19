@@ -10,7 +10,6 @@ use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
-use Epubli\Epub\Manifest\Item as SpineItem;
 use Epubli\Epub\Manifest\Manifest;
 use Epubli\Epub\Spine\Spine;
 use Epubli\Epub\Toc\NavPoint as TocNavPoint;
@@ -684,23 +683,30 @@ class Epub
             if (is_null($spineNode)) {
                 throw new Exception('No spine element found in EPUB!');
             }
-            $tocFile = $this->getTocFile($spineNode);
 
             $this->spine = new Spine();
-            $this->spine->setTocSource($tocFile);
+            $manifest = $this->getManifest();
+
+            // Get the TOC item.
+            $tocId = $spineNode->getAttribute('toc');
+            if (empty($tocId)) {
+                throw new Exception('No TOC ID given in spine!');
+            }
+            if (!isset($manifest[$tocId])) {
+                throw new Exception('TOC item referenced in spine missing in manifest!');
+            }
+
+            $this->spine->setTocItem($manifest[$tocId]);
+
             $itemRefNodes = $spineNode->getElementsByTagName('itemref');
             foreach ($itemRefNodes as $itemRef) {
                 /** @var DOMElement $itemRef */
                 $id = $itemRef->getAttribute('idref');
-                /** @var DOMElement $item */
-                $item = $this->packageXPath->query("//opf:manifest/opf:item[@id=\"$id\"]")->item(0);
-                if (is_null($item)) {
-                    throw new Exception('Item referenced in spine missing in manifest!');
+                if (!isset($manifest[$id])) {
+                    throw new Exception("Item $id referenced in spine missing in manifest!");
                 }
-                $href = urldecode($item->getAttribute('href'));
-                $handle = $this->zip->getStream($this->packageDir . $href);
-                $mediaType = new InternetMediaType($item->getAttribute('media-type'));
-                $this->spine->addItem(new SpineItem($id, $href, $handle, $mediaType));
+                // Link the item from the manifest to the spine.
+                $this->spine->addItem($manifest[$id]);
             }
         }
 
@@ -716,7 +722,7 @@ class Epub
     public function getToc()
     {
         if (!$this->toc) {
-            $xp = new EpubDomXPath($this->loadZipXml($this->getSpine()->getTocSource()));
+            $xp = new EpubDomXPath($this->loadZipXml($this->getSpine()->getTocItem()->getHref()));
             $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
             $title = $titleNode ? $titleNode->nodeValue : '';
             $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
@@ -846,32 +852,6 @@ class Epub
         }
 
         return $xpath;
-    }
-
-    /**
-     * Get the path of the TOC file inside the EPUB.
-     *
-     * @param DOMElement $spineNode
-     * @return string The path to the TOC file inside the EPUB.
-     * @throws Exception
-     */
-    private function getTocFile(DOMElement $spineNode)
-    {
-        $tocId = $spineNode->getAttribute('toc');
-        if (empty($tocId)) {
-            throw new Exception('No toc ID given in spine!');
-        }
-        /** @var DOMElement $tocItem */
-        $tocItem = $this->packageXPath->query("//opf:manifest/opf:item[@id=\"$tocId\"]")->item(0);
-        if (is_null($tocItem)) {
-            throw new Exception('TOC item referenced by spine missing in manifest!');
-        }
-        $tocFile = $tocItem->getAttribute('href');
-        if (empty($tocFile)) {
-            throw new Exception('TOC item does not contain hyper reference to TOC file!');
-        }
-
-        return $tocFile;
     }
 
     /**

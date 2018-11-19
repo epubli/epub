@@ -408,7 +408,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('title.xml', $spine->current()->getHref());
         $this->assertEquals('feedbooks', $spine->last()->getId());
 
-        $this->assertEquals('fb.ncx', $spine->getTocSource());
+        $this->assertEquals('fb.ncx', $spine->getTocItem()->getHref());
     }
 
     /**

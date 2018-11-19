@@ -15,24 +15,24 @@ use Iterator;
 class Spine implements Iterator, ArrayAccess
 {
     /** @var string */
-    private $tocSource;
+    private $tocItem;
     /** @var array|Item[] */
     private $items = [];
 
     /**
-     * @return string
+     * @return Item
      */
-    public function getTocSource()
+    public function getTocItem()
     {
-        return $this->tocSource;
+        return $this->tocItem;
     }
 
     /**
-     * @param string $tocSource
+     * @param Item $tocItem
      */
-    public function setTocSource($tocSource)
+    public function setTocItem(Item $tocItem)
     {
-        $this->tocSource = $tocSource;
+        $this->tocItem = $tocItem;
     }
 
     /**
