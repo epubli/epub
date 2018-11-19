@@ -4,6 +4,7 @@ namespace Epubli\Epub\Manifest;
 
 use ArrayAccess;
 use Countable;
+use Epubli\Exception\Exception;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
 
@@ -19,6 +20,9 @@ class Manifest implements Iterator, Countable, ArrayAccess
 
     public function add($id, $href, $handle, $mediaType = null)
     {
+        if (isset($this->items[$id])) {
+            throw new Exception("Item with ID $id already exists!");
+        }
         $item = new Item($id, $href, $handle, $mediaType);
         $this->items[$id] = $item;
 
