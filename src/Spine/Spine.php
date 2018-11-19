@@ -36,14 +36,6 @@ class Spine implements Iterator, Countable, ArrayAccess
         $this->tocItem = $tocItem;
     }
 
-    /**
-     * @return array|Item[]
-     */
-    public function getItems()
-    {
-        return $this->items;
-    }
-
     public function addItem(Item $item)
     {
         $this->items[] = $item;
