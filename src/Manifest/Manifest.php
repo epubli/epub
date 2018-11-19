@@ -17,11 +17,6 @@ class Manifest implements Iterator, Countable, ArrayAccess
     /** @var array|Item[] */
     private $items = [];
 
-    public function addItem(Item $item)
-    {
-        $this->items[] = $item;
-    }
-
     public function add($id, $href, $handle, $mediaType = null)
     {
         $item = new Item($id, $href, $handle, $mediaType);
