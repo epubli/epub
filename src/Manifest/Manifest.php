@@ -3,6 +3,7 @@
 namespace Epubli\Epub\Manifest;
 
 use ArrayAccess;
+use Countable;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
 
@@ -11,7 +12,7 @@ use Iterator;
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class Manifest implements Iterator, ArrayAccess
+class Manifest implements Iterator, Countable, ArrayAccess
 {
     /** @var array|Item[] */
     private $items = [];
@@ -101,6 +102,12 @@ class Manifest implements Iterator, ArrayAccess
         return end($this->items);
     }
 
+    /**
+     * Count items of this Manifest.
+     *
+     * @link https://php.net/manual/en/countable.count.php
+     * @return int The number of Items contained in this Manifest.
+     */
     public function count()
     {
         return count($this->items);

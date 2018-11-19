@@ -3,6 +3,7 @@
 namespace Epubli\Epub\Spine;
 
 use ArrayAccess;
+use Countable;
 use Epubli\Epub\Manifest\Item;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
@@ -12,7 +13,7 @@ use Iterator;
  *
  * @author Simon Schrape <simon@epubli.com>
  */
-class Spine implements Iterator, ArrayAccess
+class Spine implements Iterator, Countable, ArrayAccess
 {
     /** @var string */
     private $tocItem;
@@ -120,6 +121,12 @@ class Spine implements Iterator, ArrayAccess
         return end($this->items);
     }
 
+    /**
+     * Count items of this Spine.
+     *
+     * @link https://php.net/manual/en/countable.count.php
+     * @return int The number of Items contained in this Spine.
+     */
     public function count()
     {
         return count($this->items);
