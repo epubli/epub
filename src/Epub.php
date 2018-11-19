@@ -129,6 +129,8 @@ class Epub
         // close and reopen zip archive
         $this->zip->close();
         $this->zip->open($this->filename);
+
+        $this->sync();
     }
 
     /**
@@ -955,5 +957,9 @@ class Epub
         $dom = $this->packageXPath->document;
         $dom->loadXML($dom->saveXML());
         $this->packageXPath = new EpubDomXPath($dom);
+        // reset structural members
+        $this->manifest = null;
+        $this->spine = null;
+        $this->toc = null;
     }
 }
