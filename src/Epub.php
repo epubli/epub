@@ -8,6 +8,7 @@ use DOMNodeList;
 use DOMXPath;
 use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
+use Epubli\Epub\Data\Item as DataItem;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
 use Epubli\Epub\Data\Manifest;
@@ -558,9 +559,9 @@ class Epub
      */
     public function getCover()
     {
-        $path = $this->getCoverPath();
+        $item = $this->getCoverItem();
 
-        return $path ? $this->zip->getFromName($path) : null;
+        return $item ? $item->getData() : null;
     }
 
     /**
@@ -584,7 +585,7 @@ class Epub
 
         // add title page file to zip
         $template = file_get_contents($templatePath);
-        $xhtml = strtr($template, ['{{ title }}' => $this->getTitle(), '{{ coverPath }}' => $this->getCoverPath(true)]);
+        $xhtml = strtr($template, ['{{ title }}' => $this->getTitle(), '{{ coverPath }}' => $this->getCoverPath()]);
         $this->zip->addFromString($this->packageDir . $xhtmlFilename, $xhtml);
 
         // prepend title page file to manifest
@@ -927,26 +928,41 @@ class Epub
     }
 
     /**
-     * Get the internal path of the cover image file.
+     * Get the manifest item identified as cover image.
      *
-     * @param bool $relativeToPackageDir Whether to return the path relative to the package directory.
-     * @return null|string
+     * @return DataItem|null
      */
-    private function getCoverPath($relativeToPackageDir = false)
+    private function getCoverItem()
     {
         $coverId = $this->getCoverId();
         if (!$coverId) {
             return null;
         }
-
-        $nodes = $this->packageXPath->query('//opf:manifest/opf:item[@id="' . $coverId . '"]');
-        if (!$nodes->length) {
+        try {
+            $manifest = $this->getManifest();
+        } catch (Exception $e) {
             return null;
         }
-        /** @var EpubDomElement $node */
-        $node = $nodes->item(0);
+        if (!isset($manifest[$coverId])) {
+            return null;
+        }
 
-        return ($relativeToPackageDir ? '' : $this->packageDir) . $node->getAttrib('opf:href');
+        return $manifest[$coverId];
+    }
+
+    /**
+     * Get the internal path of the cover image file.
+     *
+     * @return string|null
+     */
+    private function getCoverPath()
+    {
+        $item = $this->getCoverItem();
+        if (!$item) {
+            return null;
+        }
+
+        return $item->getHref();
     }
 
     /**

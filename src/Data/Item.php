@@ -162,9 +162,11 @@ class Item
     }
 
     /**
-     * @return string
+     * Get the file data.
+     *
+     * @return string The binary data of the corresponding file.
      */
-    private function getData()
+    public function getData()
     {
         if ($this->dataHandle) {
             while (($line = fgets($this->dataHandle)) !== false) {
