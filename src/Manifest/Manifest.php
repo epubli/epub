@@ -4,6 +4,7 @@ namespace Epubli\Epub\Manifest;
 
 use ArrayAccess;
 use Countable;
+use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Exception\Exception;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
@@ -18,7 +19,17 @@ class Manifest implements Iterator, Countable, ArrayAccess
     /** @var array|Item[] */
     private $items = [];
 
-    public function add($id, $href, $handle, $mediaType = null)
+    /**
+     * Create and add an Item with the given properties.
+     *
+     * @param string $id The identifier of the new item.
+     * @param string $href The relative path of the referenced file in the EPUB.
+     * @param resource $handle A file handle to the referenced file in the EPUB
+     * @param InternetMediaType|null $mediaType
+     * @return Item The newly created Item.
+     * @throws Exception If $id is already taken.
+     */
+    public function createItem($id, $href, $handle, $mediaType = null)
     {
         if (isset($this->items[$id])) {
             throw new Exception("Item with ID $id already exists!");

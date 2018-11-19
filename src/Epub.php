@@ -662,7 +662,7 @@ class Epub
                 $href = urldecode($item->getAttribute('href'));
                 $handle = $this->zip->getStream($this->packageDir . $href);
                 $mediaType = new InternetMediaType($item->getAttribute('media-type'));
-                $this->manifest->add($id, $href, $handle, $mediaType);
+                $this->manifest->createItem($id, $href, $handle, $mediaType);
             }
         }
 
