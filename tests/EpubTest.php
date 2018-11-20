@@ -424,62 +424,43 @@ class EpubTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @dataProvider provideItemContentsTestParameters
+     * @param string $referenceStart The expected start of the extracted contents.
+     * @param string $referenceEnd The expected end of the extracted contents.
+     * @param string $spineIndex The spine index of the item to extract contents from.
+     * @param string $fragmentBegin The anchor name (ID) where to start extraction.
+     * @param string $fragmentEnd The anchor name (ID) where to end extraction.
      * @throws Exception
      */
-    public function testContents()
-    {
+    public function testItemContents(
+        $referenceStart,
+        $referenceEnd,
+        $spineIndex,
+        $fragmentBegin = null,
+        $fragmentEnd = null
+    ) {
         $spine = $this->epub->getSpine();
-        $contents = trim($spine[3]->getContents());
-        $this->assertStringStartsWith('Act I', $contents);
-        $this->assertStringEndsWith('our toil shall strive to mend.', $contents);
-
-        $contents = trim($spine[4]->getContents());
-        $this->assertStringStartsWith('SCENE I. Verona. A public place.', $contents);
-        $this->assertStringEndsWith(
-            'I\'ll pay that doctrine, or else die in debt.' . PHP_EOL . PHP_EOL . 'Exeunt',
-            $contents
-        );
+        $contents = trim($spine[$spineIndex]->getContents($fragmentBegin, $fragmentEnd));
+        $this->assertStringStartsWith($referenceStart, $contents);
+        $this->assertStringEndsWith($referenceEnd, $contents);
     }
 
-    /**
-     * @throws Exception
-     */
-    public function testContentsFragment1()
+    public function provideItemContentsTestParameters()
     {
-        $spine = $this->epub->getSpine();
-        $contents = trim($spine[16]->getContents('section_77331', 'section_77332'));
-        $this->assertEquals('Act III', $contents);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testContentsFragment2()
-    {
-        $spine = $this->epub->getSpine();
-        $contents = trim($spine[16]->getContents(null, 'section_77332'));
-        $this->assertEquals('Act III', $contents);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testContentsFragment3()
-    {
-        $spine = $this->epub->getSpine();
-        $contents = trim($spine[16]->getContents('section_77332'));
-        $this->assertStringStartsWith('SCENE I. A public place.', $contents);
-        $this->assertStringEndsWith(
-            'Mercy but murders, pardoning those that kill.' . PHP_EOL . PHP_EOL . 'Exeunt',
-            $contents
-        );
+        return [
+            ['Act I', 'our toil shall strive to mend.', 3],
+            ['SCENE I. Verona. A public place.', "I'll pay that doctrine, or else die in debt.\n\nExeunt", 4],
+            ['Act III', 'Act III', 16, 'section_77331', 'section_77332'],
+            ['Act III', 'Act III', 16, null, 'section_77332'],
+            ['SCENE I. A public place.', "pardoning those that kill.\n\nExeunt", 16, 'section_77332'],
+        ];
     }
 
     /**
      * @expectedException Exception
      * @expectedExceptionMessage Begin of fragment not found:
      */
-    public function testContentsStartFragmentException()
+    public function testItemContentsStartFragmentException()
     {
         $spine = $this->epub->getSpine();
         $spine[3]->getContents('NonExistingElement');
@@ -489,21 +470,21 @@ class EpubTest extends PHPUnit_Framework_TestCase
      * @expectedException Exception
      * @expectedExceptionMessage End of fragment not found:
      */
-    public function testContentsEndFragmentException()
+    public function testItemContentsEndFragmentException()
     {
         $spine = $this->epub->getSpine();
         $spine[3]->getContents(null, 'NonExistingElement');
     }
 
     /**
-     * @dataProvider provideMarkupTestParameters
+     * @dataProvider provideItemContentsMarkupTestParameters
      * @param string $referenceFile
      * @param string $spineIndex
      * @param string $fragmentBegin
      * @param string $fragmentEnd
      * @throws Exception
      */
-    public function testContentsMarkup($referenceFile, $spineIndex, $fragmentBegin = null, $fragmentEnd = null)
+    public function testItemContentsMarkup($referenceFile, $spineIndex, $fragmentBegin = null, $fragmentEnd = null)
     {
         $spine = $this->epub->getSpine();
         $contents = $spine[$spineIndex]->getContents($fragmentBegin, $fragmentEnd, true);
@@ -514,7 +495,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEqualXMLStructure($reference->documentElement, $extracted->documentElement);
     }
 
-    public function provideMarkupTestParameters()
+    public function provideItemContentsMarkupTestParameters()
     {
         return [
             [self::MARKUP_XML_1, 3],
