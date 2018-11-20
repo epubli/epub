@@ -25,20 +25,24 @@ class Item
     private $mediaType;
     /** @var resource A handle to the referenced file. */
     private $dataHandle;
-    /** @var string the data read from the referenced file. */
+    /** @var string The data read from the referenced file. */
     private $data;
+    /** @var int The size of the referenced file. */
+    private $size;
 
     /**
      * @param string $id This Item’s identifier.
      * @param string $href The path to the corresponding file.
      * @param resource $dataHandle A handle to the referenced file.
+     * @param int $size The size of the referenced file.
      * @param InternetMediaType|null $mediaType The media type of the corresponding file. If omitted XHTML is assumed.
      */
-    public function __construct($id, $href, $dataHandle, InternetMediaType $mediaType = null)
+    public function __construct($id, $href, $dataHandle, $size, InternetMediaType $mediaType = null)
     {
         $this->id = $id;
         $this->href = $href;
         $this->dataHandle = $dataHandle;
+        $this->size = $size;
         $this->mediaType = $mediaType ?: InternetMediaType::XHTML();
     }
 
@@ -176,5 +180,15 @@ class Item
         }
 
         return $this->data;
+    }
+
+    /**
+     * Get the size of the corresponding file.
+     *
+     * @return int
+     */
+    public function getSize()
+    {
+        return $this->size ?: strlen($this->getData());
     }
 }

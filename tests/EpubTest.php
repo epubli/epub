@@ -31,6 +31,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
     /** @var Epub */
     private $epub;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp()
     {
         // sometime I might have accidentally broken the test file
@@ -347,6 +350,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertNull($cover);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testTitlePage()
     {
         // read current cover
@@ -363,6 +369,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEmpty(trim($titlePage->getContents()));
     }
 
+    /**
+     * @throws Exception
+     */
     public function testToc()
     {
         $toc = $this->epub->getToc();
@@ -452,6 +461,9 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Act III', $contents);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testContentsFragment3()
     {
         $spine = $this->epub->getSpine();
@@ -511,5 +523,17 @@ class EpubTest extends PHPUnit_Framework_TestCase
             [self::MARKUP_XML_4, 16, null, 'section_77332'],
             [self::MARKUP_XML_5, 16, 'section_77332'],
         ];
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testItemDataSize()
+    {
+        $item = $this->epub->getSpine()[0];
+        $size = $item->getSize();
+        $data = $item->getData();
+
+        $this->assertEquals(strlen($data), $size);
     }
 }

@@ -36,6 +36,8 @@ class Epub
     private $filename;
     /** @var ZipArchive The the EPUB file loaded as zip archive */
     private $zip;
+    /** @var array A map of ZIP items mapping filenames to file sizes */
+    private $zipSizeMap;
     /** @var string The filename of the package (.opf) file */
     private $packageFile;
     /** @var string The (archive local) directory containing the package (.opf) file */
@@ -93,6 +95,8 @@ class Epub
             throw new Exception($msg, $result);
         }
 
+        $this->zipSizeMap = $this->loadSizeMap($file);
+
         // read container data
         $containerXpath = new EpubDomXPath($this->loadZipXml('META-INF/container.xml', false));
         $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
@@ -144,10 +148,10 @@ class Epub
      *
      * array(
      *      'Pratchett, Terry'   => 'Terry Pratchett',
-     *      'Simpson, Jacqeline' => 'Jacqueline Simpson',
+     *      'Simpson, Jacqueline' => 'Jacqueline Simpson',
      * )
      *
-     * @param array $authors
+     * @param array|string $authors
      */
     public function setAuthors($authors)
     {
@@ -663,9 +667,11 @@ class Epub
             foreach ($manifestNode->getElementsByTagName('item') as $item) {
                 $id = $item->getAttribute('id');
                 $href = urldecode($item->getAttribute('href'));
-                $handle = $this->zip->getStream($this->packageDir . $href);
+                $fullPath = $this->packageDir . $href;
+                $handle = $this->zip->getStream($fullPath);
+                $size = isset($this->zipSizeMap[$fullPath]) ? $this->zipSizeMap[$fullPath] : 0;
                 $mediaType = new InternetMediaType($item->getAttribute('media-type'));
-                $this->manifest->createItem($id, $href, $handle, $mediaType);
+                $this->manifest->createItem($id, $href, $handle, $size, $mediaType);
             }
         }
 
@@ -996,5 +1002,26 @@ class Epub
         $this->manifest = null;
         $this->spine = null;
         $this->toc = null;
+    }
+
+    /**
+     * Map the items of a ZIP file to their respective file sizes.
+     *
+     * @param string $file Path to a ZIP file
+     * @return array (filename => file size)
+     */
+    private function loadSizeMap($file)
+    {
+        $sizeMap = [];
+
+        $zip = zip_open($file);
+        if ($zip) {
+            while ($entry = zip_read($zip)) {
+                $sizeMap[zip_entry_name($entry)] = zip_entry_filesize($entry);
+            }
+            zip_close($zip);
+        }
+
+        return $sizeMap;
     }
 }
