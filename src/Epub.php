@@ -740,6 +740,25 @@ class Epub
     }
 
     /**
+     * Extract the contents of this EPUB.
+     *
+     * This concatenates contents of items according to their order in the spine.
+     *
+     * @param bool $keepMarkup Whether to keep the XHTML markup rather than extracted plain text.
+     * @return string The contents of this EPUB.
+     * @throws Exception
+     */
+    public function getContents($keepMarkup = false)
+    {
+        $contents = '';
+        foreach ($this->getSpine() as $item) {
+            $contents .= $item->getContents(null, null, $keepMarkup);
+        }
+
+        return $contents;
+    }
+
+    /**
      * A simple setter for simple meta attributes
      *
      * It should only be used for attributes that are expected to be unique
