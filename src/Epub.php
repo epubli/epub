@@ -751,14 +751,32 @@ class Epub
      * This concatenates contents of items according to their order in the spine.
      *
      * @param bool $keepMarkup Whether to keep the XHTML markup rather than extracted plain text.
+     * @param float $fraction If less than 1, only the respective part from the beginning of the book is extracted.
      * @return string The contents of this EPUB.
      * @throws Exception
      */
-    public function getContents($keepMarkup = false)
+    public function getContents($keepMarkup = false, $fraction = 1.0)
     {
         $contents = '';
-        foreach ($this->getSpine() as $item) {
-            $contents .= $item->getContents(null, null, $keepMarkup);
+        if ($fraction < 1) {
+            $totalSize = 0;
+            foreach ($this->getSpine() as $item) {
+                $totalSize += $item->getSize();
+            }
+            $fractionSize = $totalSize * $fraction;
+            $contentsSize = 0;
+            foreach ($this->spine as $item) {
+                $itemSize = $item->getSize();
+                if ($contentsSize + $itemSize > $fractionSize) {
+                    break;
+                }
+                $contentsSize += $itemSize;
+                $contents .= $item->getContents(null, null, $keepMarkup);
+            }
+        } else {
+            foreach ($this->getSpine() as $item) {
+                $contents .= $item->getContents(null, null, $keepMarkup);
+            }
         }
 
         return $contents;

@@ -424,6 +424,37 @@ class EpubTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @dataProvider provideContentsTestParameters
+     * @param string $referenceStart The expected start of the extracted contents.
+     * @param string $referenceEnd The expected end of the extracted contents.
+     * @param int $referenceSize The expected size of the extracted contents.
+     * @param bool $keepMarkup Whether to extract contents with or without HTML markup.
+     * @param float $fraction
+     * @throws Exception
+     */
+    public function testContents(
+        $referenceStart,
+        $referenceEnd,
+        $referenceSize,
+        $keepMarkup,
+        $fraction
+    ) {
+        $contents = trim($this->epub->getContents($keepMarkup, $fraction));
+        $this->assertStringStartsWith($referenceStart, substr($contents, 0, 100));
+        $this->assertStringEndsWith($referenceEnd, substr($contents, -100));
+        $this->assertEquals($referenceSize, strlen($contents));
+    }
+
+    public function provideContentsTestParameters()
+    {
+        return [
+            ["Romeo and Juliet\n\nWilliam Shakespeare", "www.feedbooks.com\n\n    Food for the mind", 152879, false, 1],
+            ["Romeo and Juliet\n\nWilliam Shakespeare", "seek happy nights to happy days.\n\nExeunt", 24936, false, .2],
+            ["Romeo and Juliet\n\nWilliam Shakespeare", "miss, our toil shall strive to mend.", 3810, false, .1],
+        ];
+    }
+
+    /**
      * @dataProvider provideItemContentsTestParameters
      * @param string $referenceStart The expected start of the extracted contents.
      * @param string $referenceEnd The expected end of the extracted contents.
