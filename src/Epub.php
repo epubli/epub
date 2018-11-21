@@ -6,7 +6,6 @@ use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
-use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Data\Item as DataItem;
 use Epubli\Epub\Dom\Element as EpubDomElement;
@@ -670,7 +669,7 @@ class Epub
                 $fullPath = $this->packageDir . $href;
                 $handle = $this->zip->getStream($fullPath);
                 $size = isset($this->zipSizeMap[$fullPath]) ? $this->zipSizeMap[$fullPath] : 0;
-                $mediaType = new InternetMediaType($item->getAttribute('media-type'));
+                $mediaType = $item->getAttribute('media-type');
                 $this->manifest->createItem($id, $href, $handle, $size, $mediaType);
             }
         }

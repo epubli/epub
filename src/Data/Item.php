@@ -21,7 +21,7 @@ class Item
     private $id;
     /** @var string The path to the corresponding file. */
     private $href;
-    /** @var InternetMediaType */
+    /** @var string */
     private $mediaType;
     /** @var resource A handle to the referenced file. */
     private $dataHandle;
@@ -35,15 +35,15 @@ class Item
      * @param string $href The path to the corresponding file.
      * @param resource $dataHandle A handle to the referenced file.
      * @param int $size The size of the referenced file.
-     * @param InternetMediaType|null $mediaType The media type of the corresponding file. If omitted XHTML is assumed.
+     * @param string|null $mediaType The media type of the corresponding file. If omitted XHTML is assumed.
      */
-    public function __construct($id, $href, $dataHandle, $size, InternetMediaType $mediaType = null)
+    public function __construct($id, $href, $dataHandle, $size, $mediaType = null)
     {
         $this->id = $id;
         $this->href = $href;
         $this->dataHandle = $dataHandle;
         $this->size = $size;
-        $this->mediaType = $mediaType ?: InternetMediaType::XHTML();
+        $this->mediaType = $mediaType ?: InternetMediaType::XHTML;
     }
 
     /**
@@ -63,7 +63,7 @@ class Item
     }
 
     /**
-     * @return InternetMediaType
+     * @return string
      */
     public function getMediaType()
     {

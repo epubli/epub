@@ -412,7 +412,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertCount(31, $spine);
 
         $this->assertEquals('cover', $spine->first()->getId());
-        $this->assertEquals(InternetMediaType::XHTML(), $spine->current()->getMediaType());
+        $this->assertEquals(InternetMediaType::XHTML, $spine->current()->getMediaType());
         $spine->next();
         $this->assertEquals('title.xml', $spine->current()->getHref());
         $this->assertEquals('feedbooks', $spine->last()->getId());

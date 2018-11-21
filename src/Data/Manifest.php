@@ -4,7 +4,6 @@ namespace Epubli\Epub\Data;
 
 use ArrayAccess;
 use Countable;
-use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Exception\Exception;
 use Epubli\Exception\NotSupportedException;
 use Iterator;
@@ -26,7 +25,7 @@ class Manifest implements Iterator, Countable, ArrayAccess
      * @param string $href The relative path of the referenced file in the EPUB.
      * @param resource $handle A file handle to the referenced file in the EPUB.
      * @param int $size The size of the referenced file in the EPUB.
-     * @param InternetMediaType|null $mediaType
+     * @param string|null $mediaType
      * @return Item The newly created Item.
      * @throws Exception If $id is already taken.
      */
