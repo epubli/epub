@@ -6,7 +6,6 @@ use DOMDocument;
 use DOMElement;
 use DOMNodeList;
 use DOMXPath;
-use Epubli\Common\Tools\HtmlTools;
 use Epubli\Epub\Data\Item as DataItem;
 use Epubli\Epub\Dom\Element as EpubDomElement;
 use Epubli\Epub\Dom\XPath as EpubDomXPath;
@@ -97,7 +96,7 @@ class Epub
         $this->zipSizeMap = $this->loadSizeMap($file);
 
         // read container data
-        $containerXpath = new EpubDomXPath($this->loadZipXml('META-INF/container.xml', false));
+        $containerXpath = $this->loadXPathFromItem('META-INF/container.xml');
         $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
         $node = $nodes->item(0);
         $rootFile = $node->getAttribute('full-path');
@@ -105,7 +104,7 @@ class Epub
         $this->packageDir = substr($rootFile, 0, - strlen($this->packageFile));
 
         // load metadata
-        $this->packageXPath = new EpubDomXPath($this->loadZipXml($this->packageFile));
+        $this->packageXPath = $this->loadXPathFromItem($this->packageDir . $this->packageFile);
     }
 
     public function __destruct()
@@ -726,7 +725,7 @@ class Epub
     public function getToc()
     {
         if (!$this->toc) {
-            $xp = new EpubDomXPath($this->loadZipXml($this->getSpine()->getTocItem()->getHref()));
+            $xp = $this->loadXPathFromItem($this->packageDir . $this->getSpine()->getTocItem()->getHref());
             $titleNode = $xp->query('//ncx:docTitle/ncx:text')->item(0);
             $title = $titleNode ? $titleNode->nodeValue : '';
             $authorNode = $xp->query('//ncx:docAuthor/ncx:text')->item(0);
@@ -924,30 +923,23 @@ class Epub
     }
 
     /**
-     * Load an XML file from the EPUB/ZIP archive.
+     * Load an XML file from the EPUB/ZIP archive into a new XPath object.
      *
-     * @param $path string The xml file to load from the zip archive.
-     * @param bool $relativeToPackageDir If true, $path is considered relative to package directory, else to zip root
-     * @param bool $isHtml If true, file contents is considered HTML.
-     * @return DOMDocument
-     * @throws Exception
+     * @param $path string The XML file to load from the ZIP archive.
+     * @return EpubDomXPath The XPath representation of the XML file.
+     * @throws Exception If the given path could not be read.
      */
-    private function loadZipXml($path, $relativeToPackageDir = true, $isHtml = false)
+    private function loadXPathFromItem($path)
     {
-        $fullPath = ($relativeToPackageDir ? $this->packageDir : '') . $path;
-        $data = $this->zip->getFromName($fullPath);
+        $data = $this->zip->getFromName($path);
         if (!$data) {
-            throw new Exception("Failed to read from EPUB container: $fullPath.");
+            throw new Exception("Failed to read from EPUB container: $path.");
         }
         $xml = new DOMDocument();
-        if ($isHtml) {
-            $data = HtmlTools::convertEntitiesNamedToNumeric($data);
-        } else {
-            $xml->registerNodeClass(DOMElement::class, EpubDomElement::class);
-        }
+        $xml->registerNodeClass(DOMElement::class, EpubDomElement::class);
         $xml->loadXML($data);
 
-        return $xml;
+        return new EpubDomXPath($xml);
     }
 
     /**
