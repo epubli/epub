@@ -102,10 +102,7 @@ class Epub
         $node = $nodes->item(0);
         $rootFile = $node->getAttribute('full-path');
         $this->packageFile = basename($rootFile);
-        $this->packageDir = dirname($rootFile);
-        if ($this->packageDir) {
-            $this->packageDir .= DIRECTORY_SEPARATOR;
-        }
+        $this->packageDir = substr($rootFile, 0, - strlen($this->packageFile));
 
         // load metadata
         $this->packageXPath = new EpubDomXPath($this->loadZipXml($this->packageFile));
@@ -937,9 +934,10 @@ class Epub
      */
     private function loadZipXml($path, $relativeToPackageDir = true, $isHtml = false)
     {
-        $data = $this->zip->getFromName(($relativeToPackageDir ? $this->packageDir : '').$path);
+        $fullPath = ($relativeToPackageDir ? $this->packageDir : '') . $path;
+        $data = $this->zip->getFromName($fullPath);
         if (!$data) {
-            throw new Exception('Failed to access EPUB container data: '.$path);
+            throw new Exception("Failed to read from EPUB container: $fullPath.");
         }
         $xml = new DOMDocument();
         if ($isHtml) {

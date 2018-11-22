@@ -94,7 +94,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException Exception
-     * @expectedExceptionMessage Failed to access EPUB container data: META-INF/container.xml
+     * @expectedExceptionMessage Failed to read from EPUB container: META-INF/container.xml
      */
     public function testLoadEmptyZip()
     {
