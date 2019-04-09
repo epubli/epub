@@ -19,7 +19,7 @@ In your [composer](https://getcomposer.org/).json include the following:
             "type": "vcs",
             "url": "https://github.com/epubli/epub.git"
         }
-    ]
+    ],
     "require": {
         "epubli/epub": "dev-master"
     }
