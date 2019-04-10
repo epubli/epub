@@ -57,6 +57,9 @@ class Epub
      */
     public function __construct($file)
     {
+        if (filesize($file) <= 0) {
+            throw new Exception("Epub file is empty!");
+        }
         // open file
         $this->filename = $file;
         $this->zip = new ZipArchive();
