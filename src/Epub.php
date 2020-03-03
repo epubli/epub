@@ -1034,4 +1034,16 @@ class Epub
 
         return $sizeMap;
     }
+
+    /**
+     * @return int
+     */
+    public function getImageCount()
+    {
+        $images = array_filter($this->zipSizeMap, static function($k){
+            return preg_match('/(.jpeg|.jpg|.png|.gif)/', $k);
+        }, ARRAY_FILTER_USE_KEY);
+
+        return count($images);
+    }
 }
