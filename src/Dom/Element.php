@@ -60,7 +60,9 @@ class Element extends DOMElement
         // this doesn't call the constructor: $node = $this->ownerDocument->createElement($name,$value);
         $node = new Element($namespaceUri ? $name : $localName, $value, $namespaceUri);
 
-        return $this->appendChild($node);
+        /** @var Element $node */
+        $node = $this->appendChild($node);
+        return $node;
     }
 
     /**

@@ -42,11 +42,11 @@ class Epub
     private $packageDir;
     /** @var EpubDomXPath The XPath object for the root (.opf) file */
     private $packageXPath;
-    /** @var Manifest The manifest (catalog of files) of this EPUB */
+    /** @var Manifest|null The manifest (catalog of files) of this EPUB */
     private $manifest;
-    /** @var Spine The spine structure of this EPUB */
+    /** @var Spine|null The spine structure of this EPUB */
     private $spine;
-    /** @var Toc The TOC structure of this EPUB */
+    /** @var Toc|null The TOC structure of this EPUB */
     private $toc;
 
     /**
@@ -57,6 +57,9 @@ class Epub
      */
     public function __construct($file)
     {
+        if (!is_file($file)) {
+            throw new Exception('Failed to read EPUB file. No such file.');
+        }
         if (filesize($file) <= 0) {
             throw new Exception("Epub file is empty!");
         }
@@ -101,6 +104,7 @@ class Epub
         // read container data
         $containerXpath = $this->loadXPathFromItem('META-INF/container.xml');
         $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
+        /** @var EpubDomElement $node */
         $node = $nodes->item(0);
         $rootFile = $node->getAttribute('full-path');
         $this->packageFile = basename($rootFile);
@@ -112,7 +116,11 @@ class Epub
 
     public function __destruct()
     {
-        $this->zip->close();
+        try {
+            $this->zip->close();
+        } catch (\ValueError $er) {
+            // ValueError: Invalid or uninitialized Zip object
+        }
     }
 
     /**
@@ -130,7 +138,7 @@ class Epub
     {
         $this->zip->addFromString($this->packageDir.$this->packageFile, $this->packageXPath->document->saveXML());
         // close and reopen zip archive
-        $this->zip->close();
+        $result = $this->zip->close();
         $this->zip->open($this->filename);
 
         $this->sync();
@@ -477,6 +485,7 @@ class Epub
         $subjects = [];
         $nodes = $this->packageXPath->query('//opf:metadata/dc:subject');
         foreach ($nodes as $node) {
+            /** @var EpubDomElement $node */
             $subjects[] = $node->nodeValueUnescaped;
         }
 
@@ -542,6 +551,7 @@ class Epub
         $node->setAttrib('opf:content', self::COVER_ID);
 
         // add manifest item
+        /** @var EpubDomElement $parent */
         $parent = $this->packageXPath->query('//opf:manifest')->item(0);
         $node = $parent->newChild('opf:item');
         $node->setAttrib('id', self::COVER_ID);
@@ -818,6 +828,7 @@ class Epub
             if ($value) {
                 $parent = $this->packageXPath->query('//opf:metadata')->item(0);
                 $node = new EpubDomElement($item, $value);
+                /** @var EpubDomElement $node */
                 $node = $parent->appendChild($node);
                 if ($attribute) {
                     if (is_array($attributeValue)) {
@@ -1024,13 +1035,16 @@ class Epub
     {
         $sizeMap = [];
 
-        $zip = zip_open($file);
-        if ($zip) {
-            while ($entry = zip_read($zip)) {
-                $sizeMap[zip_entry_name($entry)] = zip_entry_filesize($entry);
-            }
-            zip_close($zip);
+        $zip = new ZipArchive();
+        $result = $zip->open($file);
+        if ($result !== true) {
+            throw new Exception("Unable to open file", $result);
         }
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            $sizeMap[$stat['name']] = $stat['size'];
+        }
+        $zip->close();
 
         return $sizeMap;
     }

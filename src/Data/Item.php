@@ -23,7 +23,7 @@ class Item
     private $href;
     /** @var string */
     private $mediaType;
-    /** @var resource A handle to the referenced file. */
+    /** @var resource|null A handle to the referenced file. */
     private $dataHandle;
     /** @var string The data read from the referenced file. */
     private $data;
@@ -115,6 +115,7 @@ class Item
         ];
         $contents = '';
         $endTags = [];
+        /** @var DOMElement|DOMText $node */
         // traverse DOM structure till end point is reached, accumulating the contents
         while ($node && (!$fragmentEnd || !$node->hasAttributes() || $node->getAttribute('id') != $fragmentEnd)) {
             if ($node instanceof DOMText) {
