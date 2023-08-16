@@ -26,9 +26,9 @@ use ZipArchive;
 class Epub
 {
     /** Identifier for cover image inserted by this lib. */
-    const COVER_ID = 'epubli-epub-cover';
+    public const COVER_ID = 'epubli-epub-cover';
     /** Identifier for title page inserted by this lib. */
-    const TITLE_PAGE_ID = 'epubli-epub-titlepage';
+    public const TITLE_PAGE_ID = 'epubli-epub-titlepage';
 
     /** @var string The file path of the EPUB file */
     private $filename;
@@ -164,7 +164,7 @@ class Epub
         // Author where given as a comma separated list
         if (is_string($authors)) {
             if ($authors == '') {
-                $authors = array();
+                $authors = [];
             } else {
                 $authors = explode(',', $authors);
                 $authors = array_map('trim', $authors);
@@ -201,7 +201,7 @@ class Epub
     public function getAuthors()
     {
         $rolefix = false;
-        $authors = array();
+        $authors = [];
         $nodes = $this->packageXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
         if ($nodes->length == 0) {
             // no nodes where found, let's try again without role
@@ -374,7 +374,7 @@ class Epub
         $idVal = $this->getMeta('dc:identifier', 'id', $idRef);
         if ($normalize) {
             $idVal = strtolower($idVal);
-            $idVal = str_replace('urn:uuid:' ,'' ,$idVal);
+            $idVal = str_replace('urn:uuid:', '', $idVal);
         }
 
         return $idVal;
@@ -677,7 +677,7 @@ class Epub
                 $href = urldecode($item->getAttribute('href'));
                 $fullPath = $this->packageDir . $href;
                 $handle = $this->zip->getStream($fullPath);
-                $size = isset($this->zipSizeMap[$fullPath]) ? $this->zipSizeMap[$fullPath] : 0;
+                $size = $this->zipSizeMap[$fullPath] ?? 0;
                 $mediaType = $item->getAttribute('media-type');
                 $this->manifest->createItem($id, $href, $handle, $size, $mediaType);
             }
@@ -970,7 +970,7 @@ class Epub
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
 
-        return (String)$node->getAttrib('opf:content');
+        return (string)$node->getAttrib('opf:content');
     }
 
     /**
@@ -1054,7 +1054,7 @@ class Epub
      */
     public function getImageCount()
     {
-        $images = array_filter($this->zipSizeMap, static function($k){
+        $images = array_filter($this->zipSizeMap, static function ($k) {
             return preg_match('/(.jpeg|.jpg|.png|.gif)/', $k);
         }, ARRAY_FILTER_USE_KEY);
 

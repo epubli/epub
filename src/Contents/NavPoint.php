@@ -39,7 +39,7 @@ class NavPoint
         $this->navLabel = $label;
         $contentSourceParts = explode('#', $contentSource, 2);
         $this->contentSourceFile = $contentSourceParts[0];
-        $this->contentSourceFragment = isset($contentSourceParts[1]) ? $contentSourceParts[1] : null;
+        $this->contentSourceFragment = $contentSourceParts[1] ?? null;
         $this->children = new NavPointList();
     }
 

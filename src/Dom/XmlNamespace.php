@@ -18,16 +18,16 @@ use Epubli\Common\Tools\StringTools;
 class XmlNamespace extends Enum
 {
     /** @var string Open Container Format XML namespace */
-    const OCF = 'urn:oasis:names:tc:opendocument:xmlns:container';
+    public const OCF = 'urn:oasis:names:tc:opendocument:xmlns:container';
 
     /** @var string Open Packaging Format XML namespace */
-    const OPF = 'http://www.idpf.org/2007/opf';
+    public const OPF = 'http://www.idpf.org/2007/opf';
 
     /** @var string Dublin Core Metadata Element Set XML namespace */
-    const DC = 'http://purl.org/dc/elements/1.1/';
+    public const DC = 'http://purl.org/dc/elements/1.1/';
 
     /** @var string “Navigation Control file for XML” XML namespace */
-    const NCX = 'http://www.daisy.org/z3986/2005/ncx/';
+    public const NCX = 'http://www.daisy.org/z3986/2005/ncx/';
 
     /**
      * Directly get the URI for a given namespace prefix.

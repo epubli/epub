@@ -17,16 +17,16 @@ use PHPUnit\Framework\TestCase;
  */
 class EpubTest extends TestCase
 {
-    const TEST_EPUB = __DIR__ . '/data/test.epub';
-    const TEST_EPUB_COPY = __DIR__ . '/data/test.copy.epub';
-    const TEST_IMAGE = __DIR__ . '/data/test.jpg';
-    const EMPTY_ZIP = __DIR__ . '/data/empty.zip';
-    const BROKEN_ZIP = __DIR__ . '/data/broken.zip';
-    const MARKUP_XML_1 = __DIR__ . '/data/markup.1.xml';
-    const MARKUP_XML_2 = __DIR__ . '/data/markup.2.xml';
-    const MARKUP_XML_3 = __DIR__ . '/data/markup.3.xml';
-    const MARKUP_XML_4 = __DIR__ . '/data/markup.4.xml';
-    const MARKUP_XML_5 = __DIR__ . '/data/markup.5.xml';
+    public const TEST_EPUB = __DIR__ . '/data/test.epub';
+    public const TEST_EPUB_COPY = __DIR__ . '/data/test.copy.epub';
+    public const TEST_IMAGE = __DIR__ . '/data/test.jpg';
+    public const EMPTY_ZIP = __DIR__ . '/data/empty.zip';
+    public const BROKEN_ZIP = __DIR__ . '/data/broken.zip';
+    public const MARKUP_XML_1 = __DIR__ . '/data/markup.1.xml';
+    public const MARKUP_XML_2 = __DIR__ . '/data/markup.2.xml';
+    public const MARKUP_XML_3 = __DIR__ . '/data/markup.3.xml';
+    public const MARKUP_XML_4 = __DIR__ . '/data/markup.4.xml';
+    public const MARKUP_XML_5 = __DIR__ . '/data/markup.5.xml';
 
     /** @var Epub */
     private $epub;
@@ -122,15 +122,15 @@ class EpubTest extends TestCase
         $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->getAuthors());
 
         // set single value by indexed array
-        $this->epub->setAuthors(array('John Doe'));
+        $this->epub->setAuthors(['John Doe']);
         $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->getAuthors());
 
         // remove value with array
-        $this->epub->setAuthors(array());
+        $this->epub->setAuthors([]);
         $this->assertEquals([], $this->epub->getAuthors());
 
         // set single value by associative array
-        $this->epub->setAuthors(array('Doe, John' => 'John Doe'));
+        $this->epub->setAuthors(['Doe, John' => 'John Doe']);
         $this->assertEquals(['Doe, John' => 'John Doe'], $this->epub->getAuthors());
 
         // set multi value by string
@@ -138,15 +138,15 @@ class EpubTest extends TestCase
         $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->getAuthors());
 
         // set multi value by indexed array
-        $this->epub->setAuthors(array('John Doe', 'Jane Smith'));
+        $this->epub->setAuthors(['John Doe', 'Jane Smith']);
         $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->getAuthors());
 
         // set multi value by associative  array
-        $this->epub->setAuthors(array('Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'));
+        $this->epub->setAuthors(['Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith']);
         $this->assertEquals(['Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'], $this->epub->getAuthors());
 
         // check escaping
-        $this->epub->setAuthors(array('Doe, John&nbsp;' => 'John Doe&nbsp;'));
+        $this->epub->setAuthors(['Doe, John&nbsp;' => 'John Doe&nbsp;']);
         $this->assertEquals(['Doe, John&nbsp;' => 'John Doe&nbsp;'], $this->epub->getAuthors());
     }
 
@@ -531,11 +531,19 @@ class EpubTest extends TestCase
     {
         $spine = $this->epub->getSpine();
         $contents = $spine[$spineIndex]->getContents($fragmentBegin, $fragmentEnd, true);
+        $contents = preg_replace('/\s+/m', ' ', $contents);
         $extracted = new DOMDocument();
         $extracted->loadXML($contents);
+        $extstring = $extracted->saveXML($extracted->documentElement);
+        $extstring = preg_replace('/\s*([<>])\s*/m', '$1', $extstring);
+        $contents = file_get_contents($referenceFile);
+        $contents = preg_replace('/\s+/m', ' ', $contents);
         $reference = new DOMDocument();
-        $reference->load($referenceFile);
-        $this->assertEqualXMLStructure($reference->documentElement, $extracted->documentElement);
+        $reference->loadXML($contents);
+        $refstring = $reference->saveXML($reference->documentElement);
+        $refstring = preg_replace('/\s*([<>])\s*/m', '$1', $refstring);
+        $this->assertEquals($refstring, $extstring);
+        //$this->assertEqualXMLStructure($reference->documentElement, $extracted->documentElement);
     }
 
     /**
