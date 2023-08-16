@@ -138,9 +138,6 @@ class Epub
     {
         $this->zip->addFromString($this->packageDir.$this->packageFile, $this->packageXPath->document->saveXML());
         // close and reopen zip archive
-        foreach ($this->getManifest() as $item) {
-            $item->close();
-        }
         $result = $this->zip->close();
         $this->zip->open($this->filename);
 
@@ -667,7 +664,7 @@ class Epub
     public function getManifest()
     {
         if (!$this->manifest) {
-            /** @var DOMElement $manifestNode */
+            /** @var DOMElement|null $manifestNode */
             $manifestNode = $this->packageXPath->query('//opf:manifest')->item(0);
             if (is_null($manifestNode)) {
                 throw new Exception('No manifest element found in EPUB!');
@@ -679,10 +676,13 @@ class Epub
                 $id = $item->getAttribute('id');
                 $href = urldecode($item->getAttribute('href'));
                 $fullPath = $this->packageDir . $href;
-                $handle = $this->zip->getStream($fullPath);
+                $callable = function () use ($fullPath): string|bool {
+                    // Automatic binding of $this
+                    return $this->zip->getFromName($fullPath);
+                };
                 $size = $this->zipSizeMap[$fullPath] ?? 0;
                 $mediaType = $item->getAttribute('media-type');
-                $this->manifest->createItem($id, $href, $handle, $size, $mediaType);
+                $this->manifest->createItem($id, $href, $callable, $size, $mediaType);
             }
         }
 
@@ -698,7 +698,7 @@ class Epub
     public function getSpine()
     {
         if (!$this->spine) {
-            /** @var DOMElement $spineNode */
+            /** @var DOMElement|null $spineNode */
             $spineNode = $this->packageXPath->query('//opf:spine')->item(0);
             if (is_null($spineNode)) {
                 throw new Exception('No spine element found in EPUB!');
@@ -924,10 +924,10 @@ class Epub
             /** @var DOMElement $navPointNode */
             $id = $navPointNode->getAttribute('id');
             $class = $navPointNode->getAttribute('class');
-            $playOrder = $navPointNode->getAttribute('playOrder');
+            $playOrder = (int) $navPointNode->getAttribute('playOrder');
             $labelTextNode = $xp->query('ncx:navLabel/ncx:text', $navPointNode)->item(0);
             $label = $labelTextNode ? $labelTextNode->nodeValue : '';
-            /** @var DOMElement $contentNode */
+            /** @var DOMElement|null $contentNode */
             $contentNode = $xp->query('ncx:content', $navPointNode)->item(0);
             $contentSource = $contentNode ? $contentNode->getAttribute('src') : '';
             $navPoint = new TocNavPoint($id, $class, $playOrder, $label, $contentSource);
