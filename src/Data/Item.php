@@ -192,4 +192,16 @@ class Item
     {
         return $this->size ?: strlen($this->getData());
     }
+
+    /**
+     * Summary of close
+     * @return void
+     */
+    public function close()
+    {
+        if (is_resource($this->dataHandle)) {
+            fclose($this->dataHandle);
+            $this->dataHandle = null;
+        }
+    }
 }
