@@ -26,9 +26,9 @@ use ZipArchive;
 class Epub
 {
     /** Identifier for cover image inserted by this lib. */
-    const COVER_ID = 'epubli-epub-cover';
+    public const COVER_ID = 'epubli-epub-cover';
     /** Identifier for title page inserted by this lib. */
-    const TITLE_PAGE_ID = 'epubli-epub-titlepage';
+    public const TITLE_PAGE_ID = 'epubli-epub-titlepage';
 
     /** @var string The file path of the EPUB file */
     private $filename;
@@ -42,11 +42,11 @@ class Epub
     private $packageDir;
     /** @var EpubDomXPath The XPath object for the root (.opf) file */
     private $packageXPath;
-    /** @var Manifest The manifest (catalog of files) of this EPUB */
+    /** @var Manifest|null The manifest (catalog of files) of this EPUB */
     private $manifest;
-    /** @var Spine The spine structure of this EPUB */
+    /** @var Spine|null The spine structure of this EPUB */
     private $spine;
-    /** @var Toc The TOC structure of this EPUB */
+    /** @var Toc|null The TOC structure of this EPUB */
     private $toc;
 
     /**
@@ -57,6 +57,9 @@ class Epub
      */
     public function __construct($file)
     {
+        if (!is_file($file)) {
+            throw new Exception('Failed to read EPUB file. No such file.');
+        }
         if (filesize($file) <= 0) {
             throw new Exception("Epub file is empty!");
         }
@@ -101,6 +104,7 @@ class Epub
         // read container data
         $containerXpath = $this->loadXPathFromItem('META-INF/container.xml');
         $nodes = $containerXpath->query('//ocf:rootfiles/ocf:rootfile[@media-type="application/oebps-package+xml"]');
+        /** @var EpubDomElement $node */
         $node = $nodes->item(0);
         $rootFile = $node->getAttribute('full-path');
         $this->packageFile = basename($rootFile);
@@ -112,7 +116,11 @@ class Epub
 
     public function __destruct()
     {
-        $this->zip->close();
+        try {
+            $this->zip->close();
+        } catch (\ValueError $er) {
+            // ValueError: Invalid or uninitialized Zip object
+        }
     }
 
     /**
@@ -130,7 +138,7 @@ class Epub
     {
         $this->zip->addFromString($this->packageDir.$this->packageFile, $this->packageXPath->document->saveXML());
         // close and reopen zip archive
-        $this->zip->close();
+        $result = $this->zip->close();
         $this->zip->open($this->filename);
 
         $this->sync();
@@ -156,7 +164,7 @@ class Epub
         // Author where given as a comma separated list
         if (is_string($authors)) {
             if ($authors == '') {
-                $authors = array();
+                $authors = [];
             } else {
                 $authors = explode(',', $authors);
                 $authors = array_map('trim', $authors);
@@ -193,7 +201,7 @@ class Epub
     public function getAuthors()
     {
         $rolefix = false;
-        $authors = array();
+        $authors = [];
         $nodes = $this->packageXPath->query('//opf:metadata/dc:creator[@opf:role="aut"]');
         if ($nodes->length == 0) {
             // no nodes where found, let's try again without role
@@ -366,7 +374,7 @@ class Epub
         $idVal = $this->getMeta('dc:identifier', 'id', $idRef);
         if ($normalize) {
             $idVal = strtolower($idVal);
-            $idVal = str_replace('urn:uuid:' ,'' ,$idVal);
+            $idVal = str_replace('urn:uuid:', '', $idVal);
         }
 
         return $idVal;
@@ -477,6 +485,7 @@ class Epub
         $subjects = [];
         $nodes = $this->packageXPath->query('//opf:metadata/dc:subject');
         foreach ($nodes as $node) {
+            /** @var EpubDomElement $node */
             $subjects[] = $node->nodeValueUnescaped;
         }
 
@@ -542,6 +551,7 @@ class Epub
         $node->setAttrib('opf:content', self::COVER_ID);
 
         // add manifest item
+        /** @var EpubDomElement $parent */
         $parent = $this->packageXPath->query('//opf:manifest')->item(0);
         $node = $parent->newChild('opf:item');
         $node->setAttrib('id', self::COVER_ID);
@@ -654,7 +664,7 @@ class Epub
     public function getManifest()
     {
         if (!$this->manifest) {
-            /** @var DOMElement $manifestNode */
+            /** @var DOMElement|null $manifestNode */
             $manifestNode = $this->packageXPath->query('//opf:manifest')->item(0);
             if (is_null($manifestNode)) {
                 throw new Exception('No manifest element found in EPUB!');
@@ -666,10 +676,13 @@ class Epub
                 $id = $item->getAttribute('id');
                 $href = urldecode($item->getAttribute('href'));
                 $fullPath = $this->packageDir . $href;
-                $handle = $this->zip->getStream($fullPath);
-                $size = isset($this->zipSizeMap[$fullPath]) ? $this->zipSizeMap[$fullPath] : 0;
+                $callable = function () use ($fullPath): string|bool {
+                    // Automatic binding of $this
+                    return $this->zip->getFromName($fullPath);
+                };
+                $size = $this->zipSizeMap[$fullPath] ?? 0;
                 $mediaType = $item->getAttribute('media-type');
-                $this->manifest->createItem($id, $href, $handle, $size, $mediaType);
+                $this->manifest->createItem($id, $href, $callable, $size, $mediaType);
             }
         }
 
@@ -685,7 +698,7 @@ class Epub
     public function getSpine()
     {
         if (!$this->spine) {
-            /** @var DOMElement $spineNode */
+            /** @var DOMElement|null $spineNode */
             $spineNode = $this->packageXPath->query('//opf:spine')->item(0);
             if (is_null($spineNode)) {
                 throw new Exception('No spine element found in EPUB!');
@@ -818,6 +831,7 @@ class Epub
             if ($value) {
                 $parent = $this->packageXPath->query('//opf:metadata')->item(0);
                 $node = new EpubDomElement($item, $value);
+                /** @var EpubDomElement $node */
                 $node = $parent->appendChild($node);
                 if ($attribute) {
                     if (is_array($attributeValue)) {
@@ -910,10 +924,10 @@ class Epub
             /** @var DOMElement $navPointNode */
             $id = $navPointNode->getAttribute('id');
             $class = $navPointNode->getAttribute('class');
-            $playOrder = $navPointNode->getAttribute('playOrder');
+            $playOrder = (int) $navPointNode->getAttribute('playOrder');
             $labelTextNode = $xp->query('ncx:navLabel/ncx:text', $navPointNode)->item(0);
             $label = $labelTextNode ? $labelTextNode->nodeValue : '';
-            /** @var DOMElement $contentNode */
+            /** @var DOMElement|null $contentNode */
             $contentNode = $xp->query('ncx:content', $navPointNode)->item(0);
             $contentSource = $contentNode ? $contentNode->getAttribute('src') : '';
             $navPoint = new TocNavPoint($id, $class, $playOrder, $label, $contentSource);
@@ -959,7 +973,7 @@ class Epub
         /** @var EpubDomElement $node */
         $node = $nodes->item(0);
 
-        return (String)$node->getAttrib('opf:content');
+        return (string)$node->getAttrib('opf:content');
     }
 
     /**
@@ -1024,13 +1038,16 @@ class Epub
     {
         $sizeMap = [];
 
-        $zip = zip_open($file);
-        if ($zip) {
-            while ($entry = zip_read($zip)) {
-                $sizeMap[zip_entry_name($entry)] = zip_entry_filesize($entry);
-            }
-            zip_close($zip);
+        $zip = new ZipArchive();
+        $result = $zip->open($file);
+        if ($result !== true) {
+            throw new Exception("Unable to open file", $result);
         }
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            $sizeMap[$stat['name']] = $stat['size'];
+        }
+        $zip->close();
 
         return $sizeMap;
     }
@@ -1040,7 +1057,7 @@ class Epub
      */
     public function getImageCount()
     {
-        $images = array_filter($this->zipSizeMap, static function($k){
+        $images = array_filter($this->zipSizeMap, static function ($k) {
             return preg_match('/(.jpeg|.jpg|.png|.gif)/', $k);
         }, ARRAY_FILTER_USE_KEY);
 

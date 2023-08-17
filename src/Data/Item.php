@@ -23,8 +23,8 @@ class Item
     private $href;
     /** @var string */
     private $mediaType;
-    /** @var resource A handle to the referenced file. */
-    private $dataHandle;
+    /** @var callable|null A callable to get data from the referenced file. */
+    private $dataCallable;
     /** @var string The data read from the referenced file. */
     private $data;
     /** @var int The size of the referenced file. */
@@ -33,15 +33,15 @@ class Item
     /**
      * @param string $id This Item’s identifier.
      * @param string $href The path to the corresponding file.
-     * @param resource $dataHandle A handle to the referenced file.
+     * @param callable $dataCallable A callable to get data from the referenced file.
      * @param int $size The size of the referenced file.
      * @param string|null $mediaType The media type of the corresponding file. If omitted XHTML is assumed.
      */
-    public function __construct($id, $href, $dataHandle, $size, $mediaType = null)
+    public function __construct($id, $href, $dataCallable, $size, $mediaType = null)
     {
         $this->id = $id;
         $this->href = $href;
-        $this->dataHandle = $dataHandle;
+        $this->dataCallable = $dataCallable;
         $this->size = $size;
         $this->mediaType = $mediaType ?: InternetMediaType::XHTML;
     }
@@ -115,6 +115,7 @@ class Item
         ];
         $contents = '';
         $endTags = [];
+        /** @var DOMElement|DOMText $node */
         // traverse DOM structure till end point is reached, accumulating the contents
         while ($node && (!$fragmentEnd || !$node->hasAttributes() || $node->getAttribute('id') != $fragmentEnd)) {
             if ($node instanceof DOMText) {
@@ -172,11 +173,9 @@ class Item
      */
     public function getData()
     {
-        if ($this->dataHandle) {
-            while (($line = fgets($this->dataHandle)) !== false) {
-                $this->data .= $line;
-            }
-            fclose($this->dataHandle);
+        if ($this->dataCallable) {
+            $this->data = call_user_func($this->dataCallable);
+            $this->dataCallable = null;
         }
 
         return $this->data;

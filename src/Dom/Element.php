@@ -17,7 +17,7 @@ class Element extends DOMElement
 {
     public function __construct($name, $value = '', $namespaceUri = '')
     {
-        list($prefix, $name) = $this->splitQualifiedName($name);
+        [$prefix, $name] = $this->splitQualifiedName($name);
         $value = htmlspecialchars($value);
         if (!$namespaceUri && $prefix) {
             $namespaceUri = XmlNamespace::getUri($prefix);
@@ -55,12 +55,14 @@ class Element extends DOMElement
      */
     public function newChild($name, $value = '')
     {
-        list($localName, $namespaceUri) = $this->getNameContext($name);
+        [$localName, $namespaceUri] = $this->getNameContext($name);
 
         // this doesn't call the constructor: $node = $this->ownerDocument->createElement($name,$value);
         $node = new Element($namespaceUri ? $name : $localName, $value, $namespaceUri);
 
-        return $this->appendChild($node);
+        /** @var Element $node */
+        $node = $this->appendChild($node);
+        return $node;
     }
 
     /**
@@ -70,7 +72,7 @@ class Element extends DOMElement
      */
     public function getAttrib($name)
     {
-        list($localName, $namespaceUri) = $this->getNameContext($name);
+        [$localName, $namespaceUri] = $this->getNameContext($name);
 
         // return value if none was given
         if ($namespaceUri) {
@@ -87,7 +89,7 @@ class Element extends DOMElement
      */
     public function setAttrib($name, $value)
     {
-        list($localName, $namespaceUri) = $this->getNameContext($name);
+        [$localName, $namespaceUri] = $this->getNameContext($name);
 
         if ($namespaceUri) {
             $this->setAttributeNS($namespaceUri, $localName, $value);
@@ -102,7 +104,7 @@ class Element extends DOMElement
      */
     public function removeAttrib($name)
     {
-        list($localName, $namespaceUri) = $this->getNameContext($name);
+        [$localName, $namespaceUri] = $this->getNameContext($name);
 
         if ($namespaceUri) {
             $this->removeAttributeNS($namespaceUri, $localName);
@@ -141,7 +143,7 @@ class Element extends DOMElement
      */
     private function getNameContext($name)
     {
-        list($prefix, $localName) = $this->splitQualifiedName($name);
+        [$prefix, $localName] = $this->splitQualifiedName($name);
 
         $namespaceUri = '';
         if ($prefix) {

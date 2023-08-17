@@ -6,7 +6,7 @@ use DOMDocument;
 use Epubli\Common\Enum\InternetMediaType;
 use Epubli\Epub\Contents\NavPoint;
 use Epubli\Exception\Exception;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test for EPUB library
@@ -15,18 +15,18 @@ use PHPUnit_Framework_TestCase;
  * @author Andreas Gohr <andi@splitbrain.org> © 2012
  * @author Simon Schrape <simon@epubli.com> © 2015
  */
-class EpubTest extends PHPUnit_Framework_TestCase
+class EpubTest extends TestCase
 {
-    const TEST_EPUB = __DIR__ . '/data/test.epub';
-    const TEST_EPUB_COPY = __DIR__ . '/data/test.copy.epub';
-    const TEST_IMAGE = __DIR__ . '/data/test.jpg';
-    const EMPTY_ZIP = __DIR__ . '/data/empty.zip';
-    const BROKEN_ZIP = __DIR__ . '/data/broken.zip';
-    const MARKUP_XML_1 = __DIR__ . '/data/markup.1.xml';
-    const MARKUP_XML_2 = __DIR__ . '/data/markup.2.xml';
-    const MARKUP_XML_3 = __DIR__ . '/data/markup.3.xml';
-    const MARKUP_XML_4 = __DIR__ . '/data/markup.4.xml';
-    const MARKUP_XML_5 = __DIR__ . '/data/markup.5.xml';
+    public const TEST_EPUB = __DIR__ . '/data/test.epub';
+    public const TEST_EPUB_COPY = __DIR__ . '/data/test.copy.epub';
+    public const TEST_IMAGE = __DIR__ . '/data/test.jpg';
+    public const EMPTY_ZIP = __DIR__ . '/data/empty.zip';
+    public const BROKEN_ZIP = __DIR__ . '/data/broken.zip';
+    public const MARKUP_XML_1 = __DIR__ . '/data/markup.1.xml';
+    public const MARKUP_XML_2 = __DIR__ . '/data/markup.2.xml';
+    public const MARKUP_XML_3 = __DIR__ . '/data/markup.3.xml';
+    public const MARKUP_XML_4 = __DIR__ . '/data/markup.4.xml';
+    public const MARKUP_XML_5 = __DIR__ . '/data/markup.5.xml';
 
     /** @var Epub */
     private $epub;
@@ -34,7 +34,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
     /**
      * @throws Exception
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         // sometime I might have accidentally broken the test file
         if (filesize(self::TEST_EPUB) != 768780) {
@@ -46,67 +46,69 @@ class EpubTest extends PHPUnit_Framework_TestCase
             die('failed to create copy of the test book');
         }
 
+        // @see https://github.com/sebastianbergmann/phpunit/issues/5062#issuecomment-1416362657
+        set_error_handler(
+            static function (int $errno, string $errstr) {
+                throw new \Exception($errstr, $errno);
+            },
+            E_ALL
+        );
+
         $this->epub = new Epub(self::TEST_EPUB_COPY);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
+        restore_error_handler();
+
         unlink(self::TEST_EPUB_COPY);
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Failed to read EPUB file. Not a zip archive.
-     */
-    public function testLoadNonZip()
+    public function testLoadNonZip(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Failed to read EPUB file. Not a zip archive.');
         new Epub(self::TEST_IMAGE);
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Failed to read EPUB file. Zip archive inconsistent.
-     */
-    public function testLoadBrokenZip()
+    public function testLoadBrokenZip(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Failed to read EPUB file. Zip archive inconsistent.');
         new Epub(self::BROKEN_ZIP);
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Failed to read EPUB file. No such file.
-     */
-    public function testLoadMissingFile()
+    public function testLoadMissingFile(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Failed to read EPUB file. No such file.');
         new Epub('/a/file/that/is/not_there.epub');
     }
 
     /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Failed to read EPUB file.
      * We cannot expect a more specific exception message. ZipArchive::open returns 28
      * which is not known as an error code.
      */
-    public function testLoadDirectory()
+    public function testLoadDirectory(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Failed to read EPUB file.');
         new Epub(__DIR__);
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Failed to read from EPUB container: META-INF/container.xml
-     */
-    public function testLoadEmptyZip()
+    public function testLoadEmptyZip(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Failed to read from EPUB container: META-INF/container.xml');
         new Epub(self::EMPTY_ZIP);
     }
 
-    public function testFilename()
+    public function testFilename(): void
     {
         $this->assertEquals(self::TEST_EPUB_COPY, $this->epub->getFilename());
     }
 
-    public function testAuthors()
+    public function testAuthors(): void
     {
         // read curent value
         $this->assertEquals(['Shakespeare, William' => 'William Shakespeare'], $this->epub->getAuthors());
@@ -120,15 +122,15 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->getAuthors());
 
         // set single value by indexed array
-        $this->epub->setAuthors(array('John Doe'));
+        $this->epub->setAuthors(['John Doe']);
         $this->assertEquals(['John Doe' => 'John Doe'], $this->epub->getAuthors());
 
         // remove value with array
-        $this->epub->setAuthors(array());
+        $this->epub->setAuthors([]);
         $this->assertEquals([], $this->epub->getAuthors());
 
         // set single value by associative array
-        $this->epub->setAuthors(array('Doe, John' => 'John Doe'));
+        $this->epub->setAuthors(['Doe, John' => 'John Doe']);
         $this->assertEquals(['Doe, John' => 'John Doe'], $this->epub->getAuthors());
 
         // set multi value by string
@@ -136,19 +138,19 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->getAuthors());
 
         // set multi value by indexed array
-        $this->epub->setAuthors(array('John Doe', 'Jane Smith'));
+        $this->epub->setAuthors(['John Doe', 'Jane Smith']);
         $this->assertEquals(['John Doe' => 'John Doe', 'Jane Smith' => 'Jane Smith'], $this->epub->getAuthors());
 
         // set multi value by associative  array
-        $this->epub->setAuthors(array('Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'));
+        $this->epub->setAuthors(['Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith']);
         $this->assertEquals(['Doe, John' => 'John Doe', 'Smith, Jane' => 'Jane Smith'], $this->epub->getAuthors());
 
         // check escaping
-        $this->epub->setAuthors(array('Doe, John&nbsp;' => 'John Doe&nbsp;'));
+        $this->epub->setAuthors(['Doe, John&nbsp;' => 'John Doe&nbsp;']);
         $this->assertEquals(['Doe, John&nbsp;' => 'John Doe&nbsp;'], $this->epub->getAuthors());
     }
 
-    public function testTitle()
+    public function testTitle(): void
     {
         // get current value
         $this->assertEquals('Romeo and Juliet', $this->epub->getTitle());
@@ -166,7 +168,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getTitle());
     }
 
-    public function testLanguage()
+    public function testLanguage(): void
     {
         // get current value
         $this->assertEquals('en', $this->epub->getLanguage());
@@ -184,7 +186,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getLanguage());
     }
 
-    public function testPublisher()
+    public function testPublisher(): void
     {
         // get current value
         $this->assertEquals('Feedbooks', $this->epub->getPublisher());
@@ -202,7 +204,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getPublisher());
     }
 
-    public function testCopyright()
+    public function testCopyright(): void
     {
         // get current value
         $this->assertEquals('', $this->epub->getCopyright());
@@ -220,7 +222,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getCopyright());
     }
 
-    public function testDescription()
+    public function testDescription(): void
     {
         // get current value
         $this->assertStringStartsWith('Romeo and Juliet is a tragic play written', $this->epub->getDescription());
@@ -238,7 +240,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getDescription());
     }
 
-    public function testUniqueIdentifier()
+    public function testUniqueIdentifier(): void
     {
         // get current value
         $this->assertEquals('urn:uuid:7d38d098-4234-11e1-97b6-001cc0a62c0b', $this->epub->getUniqueIdentifier());
@@ -250,7 +252,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('134htb34tp089h1b', $this->epub->getUuid());
     }
 
-    public function testUuid()
+    public function testUuid(): void
     {
         // get current value
         $this->assertEquals('urn:uuid:7d38d098-4234-11e1-97b6-001cc0a62c0b', $this->epub->getUuid());
@@ -268,7 +270,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getUuid());
     }
 
-    public function testUri()
+    public function testUri(): void
     {
         // get current value
         $this->assertEquals('http://www.feedbooks.com/book/2936', $this->epub->getUri());
@@ -286,7 +288,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getUri());
     }
 
-    public function testIsbn()
+    public function testIsbn(): void
     {
         // get current value
         $this->assertEquals('', $this->epub->getIsbn());
@@ -304,7 +306,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Foo&nbsp;Bar', $this->epub->getIsbn());
     }
 
-    public function testSubject()
+    public function testSubject(): void
     {
         // get current values
         $this->assertEquals(['Fiction', 'Drama', 'Romance'], $this->epub->getSubjects());
@@ -330,7 +332,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['Fiction', 'Drama&nbsp;', 'Romance'], $this->epub->getSubjects());
     }
 
-    public function testCover()
+    public function testCover(): void
     {
         // read current cover
         $cover = $this->epub->getCover();
@@ -352,6 +354,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @throws Exception
+     * @return void
      */
     public function testTitlePage()
     {
@@ -371,6 +374,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @throws Exception
+     * @return void
      */
     public function testToc()
     {
@@ -405,6 +409,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @throws Exception
+     * @return void
      */
     public function testSpine()
     {
@@ -431,6 +436,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
      * @param bool $keepMarkup Whether to extract contents with or without HTML markup.
      * @param float $fraction
      * @throws Exception
+     * @return void
      */
     public function testContents(
         $referenceStart,
@@ -445,6 +451,10 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($referenceSize, strlen($contents));
     }
 
+    /**
+     * Summary of provideContentsTestParameters
+     * @return array<mixed>
+     */
     public function provideContentsTestParameters()
     {
         return [
@@ -462,6 +472,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
      * @param string $fragmentBegin The anchor name (ID) where to start extraction.
      * @param string $fragmentEnd The anchor name (ID) where to end extraction.
      * @throws Exception
+     * @return void
      */
     public function testItemContents(
         $referenceStart,
@@ -476,6 +487,10 @@ class EpubTest extends PHPUnit_Framework_TestCase
         $this->assertStringEndsWith($referenceEnd, $contents);
     }
 
+    /**
+     * Summary of provideItemContentsTestParameters
+     * @return array<mixed>
+     */
     public function provideItemContentsTestParameters()
     {
         return [
@@ -487,22 +502,18 @@ class EpubTest extends PHPUnit_Framework_TestCase
         ];
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Begin of fragment not found:
-     */
-    public function testItemContentsStartFragmentException()
+    public function testItemContentsStartFragmentException(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Begin of fragment not found:');
         $spine = $this->epub->getSpine();
         $spine[3]->getContents('NonExistingElement');
     }
 
-    /**
-     * @expectedException Exception
-     * @expectedExceptionMessage End of fragment not found:
-     */
-    public function testItemContentsEndFragmentException()
+    public function testItemContentsEndFragmentException(): void
     {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('End of fragment not found:');
         $spine = $this->epub->getSpine();
         $spine[3]->getContents(null, 'NonExistingElement');
     }
@@ -514,18 +525,31 @@ class EpubTest extends PHPUnit_Framework_TestCase
      * @param string $fragmentBegin
      * @param string $fragmentEnd
      * @throws Exception
+     * @return void
      */
     public function testItemContentsMarkup($referenceFile, $spineIndex, $fragmentBegin = null, $fragmentEnd = null)
     {
         $spine = $this->epub->getSpine();
         $contents = $spine[$spineIndex]->getContents($fragmentBegin, $fragmentEnd, true);
+        $contents = preg_replace('/\s+/m', ' ', $contents);
         $extracted = new DOMDocument();
         $extracted->loadXML($contents);
+        $extstring = $extracted->saveXML($extracted->documentElement);
+        $extstring = preg_replace('/\s*([<>])\s*/m', '$1', $extstring);
+        $contents = file_get_contents($referenceFile);
+        $contents = preg_replace('/\s+/m', ' ', $contents);
         $reference = new DOMDocument();
-        $reference->load($referenceFile);
-        $this->assertEqualXMLStructure($reference->documentElement, $extracted->documentElement);
+        $reference->loadXML($contents);
+        $refstring = $reference->saveXML($reference->documentElement);
+        $refstring = preg_replace('/\s*([<>])\s*/m', '$1', $refstring);
+        $this->assertEquals($refstring, $extstring);
+        //$this->assertEqualXMLStructure($reference->documentElement, $extracted->documentElement);
     }
 
+    /**
+     * Summary of provideItemContentsMarkupTestParameters
+     * @return array<mixed>
+     */
     public function provideItemContentsMarkupTestParameters()
     {
         return [
@@ -539,6 +563,7 @@ class EpubTest extends PHPUnit_Framework_TestCase
 
     /**
      * @throws Exception
+     * @return void
      */
     public function testItemDataSize()
     {
